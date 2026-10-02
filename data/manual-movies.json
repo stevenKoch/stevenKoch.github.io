@@ -1,0 +1,5 @@
+{
+  "updated_at": null,
+  "note": "Manually added movies not (yet) in Plex. Merged with movies.json on load. Ids are manual-<slug>-<year>; localStorage wins for the same id.",
+  "movies": []
+}

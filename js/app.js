@@ -3,6 +3,7 @@
 
   const LS_FORMATS = "kochMovieDb.formatsOverlay.v1";
   const LS_WISHLIST = "kochMovieDb.wishlist.v1";
+  const LS_MANUAL = "kochMovieDb.manualMovies.v1";
 
   const PHYSICAL_KEYS = ["uhd_disc", "bluray", "dvd", "vhs", "digital"];
   const PHYSICAL_LABELS = {
@@ -18,6 +19,7 @@
     meta: {},
     formatsOverlay: { formats: {} },
     wishlist: { items: [] },
+    manualMovies: { movies: [] },
     filters: {
       q: "",
       genre: "",
@@ -42,7 +44,7 @@
   }
 
   function movieKey(m) {
-    return String(m.plex_rating_key || `${m.title}|${m.year || ""}`);
+    return String(m.id || m.plex_rating_key || `${m.title}|${m.year || ""}`);
   }
 
   function loadLS(key, fallback) {
@@ -71,12 +73,40 @@
     URL.revokeObjectURL(url);
   }
 
+  function slugify(title) {
+    return String(title || "")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80) || "untitled";
+  }
+
+  function manualId(title, year) {
+    const y = year != null && year !== "" ? String(year) : "unknown";
+    return `manual-${slugify(title)}-${y}`;
+  }
+
+  function titlesMatch(a, b) {
+    return String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
+  }
+
+  function findByTitleYear(title, year) {
+    const y = year === "" || year == null ? null : Number(year);
+    return state.movies.find((m) => {
+      if (!titlesMatch(m.title, title)) return false;
+      if (y == null || Number.isNaN(y)) return m.year == null;
+      return Number(m.year) === y;
+    });
+  }
+
   /** Merge base Plex formats with physical overlay. */
   function effectiveFormats(movie) {
     const base = movie.formats || {};
     const over = state.formatsOverlay.formats[movieKey(movie)] || {};
     return {
-      plex: !!base.plex,
+      plex: over.plex != null ? !!over.plex : !!base.plex,
       // Plex file 4K (resolution) — not physical disc
       plex_4k_file: !!base.uhd4k || (movie.resolutions || []).some((r) => String(r).toLowerCase() === "4k"),
       digital: over.digital != null ? !!over.digital : !!base.digital,
@@ -131,6 +161,9 @@
   function formatBadges(movie) {
     const fmt = effectiveFormats(movie);
     const bits = [];
+    if (movie.source === "manual" || (movie.id && String(movie.id).startsWith("manual-"))) {
+      bits.push(`<span class="badge manual">Manual</span>`);
+    }
     if (fmt.plex) bits.push(`<span class="badge plex">On Plex</span>`);
     for (const r of movie.resolutions || []) {
       bits.push(`<span class="badge res">${escapeHtml(String(r).toUpperCase())}</span>`);
@@ -140,6 +173,8 @@
     if (fmt.dvd) bits.push(`<span class="badge disc">DVD</span>`);
     if (fmt.vhs) bits.push(`<span class="badge disc">VHS</span>`);
     if (fmt.digital) bits.push(`<span class="badge disc">Digital</span>`);
+    if (movie.animation === "live") bits.push(`<span class="badge anim">Live</span>`);
+    if (movie.animation === "animated") bits.push(`<span class="badge anim">Animated</span>`);
     if (isWishlisted(movie)) bits.push(`<span class="badge wish">Wishlist</span>`);
     return bits.join("");
   }
@@ -264,14 +299,18 @@
       movie.year || null,
       movie.studio || null,
       (movie.genres || []).join(" · ") || null,
+      movie.animation === "live" ? "Live action" : movie.animation === "animated" ? "Animated" : null,
       movie.content_rating || null,
+      movie.source === "manual" ? "Manual add" : null,
     ]
       .filter(Boolean)
       .join(" · ");
     $("#modal-summary").textContent = movie.summary || "No synopsis available.";
     $("#modal-res").textContent = (movie.resolutions || []).length
       ? `Plex file resolution: ${(movie.resolutions || []).join(", ").toUpperCase()}`
-      : "Plex file resolution: unknown";
+      : movie.source === "manual"
+        ? "Not on Plex yet (manual entry)."
+        : "Plex file resolution: unknown";
 
     const box = $("#format-toggles");
     box.innerHTML = PHYSICAL_KEYS.map((k) => {
@@ -294,6 +333,18 @@
     $("#modal-backdrop").classList.add("hidden");
   }
 
+  function openAddMovieModal() {
+    const form = $("#add-movie-form");
+    form.reset();
+    $$("#add-format-toggles .toggle").forEach((t) => t.classList.remove("on"));
+    $("#add-movie-backdrop").classList.remove("hidden");
+    $("#add-title").focus();
+  }
+
+  function closeAddMovieModal() {
+    $("#add-movie-backdrop").classList.add("hidden");
+  }
+
   function selectedMovie() {
     return state.movies.find((m) => movieKey(m) === state.selectedKey);
   }
@@ -310,15 +361,68 @@
     renderStats();
   }
 
+  function persistManualMovies() {
+    state.manualMovies.updated_at = new Date().toISOString();
+    saveLS(LS_MANUAL, state.manualMovies);
+  }
+
   function setPhysicalFormat(key, fmtKey, value) {
     if (!state.formatsOverlay.formats[key]) state.formatsOverlay.formats[key] = {};
     state.formatsOverlay.formats[key][fmtKey] = !!value;
     // Keep overlay tidy: also clear legacy uhd4k if using uhd_disc
     if (fmtKey === "uhd_disc") delete state.formatsOverlay.formats[key].uhd4k;
     persistFormatsOverlay();
+
+    // Keep manual movie object formats in sync when editing a manual entry
+    const manual = (state.manualMovies.movies || []).find((m) => movieKey(m) === key);
+    if (manual) {
+      if (!manual.formats) manual.formats = {};
+      if (fmtKey === "plex") manual.formats.plex = !!value;
+      else manual.formats[fmtKey] = !!value;
+      persistManualMovies();
+      const live = state.movies.find((m) => movieKey(m) === key);
+      if (live && live.formats) live.formats[fmtKey] = !!value;
+    }
   }
 
-  function mergeServerOverlays(serverFormats, serverWishlist) {
+  function mergeManualLists(serverManual, localManual) {
+    const byId = new Map();
+    for (const m of serverManual.movies || []) {
+      const id = m.id || manualId(m.title, m.year);
+      byId.set(id, { ...m, id, source: "manual" });
+    }
+    // local wins for same id
+    for (const m of localManual.movies || []) {
+      const id = m.id || manualId(m.title, m.year);
+      byId.set(id, { ...m, id, source: "manual" });
+    }
+    return {
+      updated_at: localManual.updated_at || serverManual.updated_at || null,
+      note: serverManual.note || localManual.note,
+      movies: [...byId.values()],
+    };
+  }
+
+  function rebuildMovieList(plexMovies) {
+    const plex = (plexMovies || []).map((m) => ({ ...m }));
+    const plexKeys = new Set(plex.map((m) => movieKey(m)));
+    const manuals = (state.manualMovies.movies || []).filter((m) => {
+      const id = m.id || manualId(m.title, m.year);
+      // skip manual that collides with plex key (shouldn't happen with manual- prefix)
+      return !plexKeys.has(id);
+    });
+    // Also drop manuals whose title+year already exist on Plex — keep Plex row;
+    // formats for those should live in formats-overlay only.
+    const filteredManuals = manuals.filter((m) => {
+      const hit = plex.find(
+        (p) => titlesMatch(p.title, m.title) && Number(p.year || 0) === Number(m.year || 0)
+      );
+      return !hit;
+    });
+    state.movies = [...plex, ...filteredManuals.map((m) => ({ ...m, source: "manual" }))];
+  }
+
+  function mergeServerOverlays(serverFormats, serverWishlist, serverManual) {
     // Server committed files are baseline; localStorage wins for newer edits.
     const localF = loadLS(LS_FORMATS, { formats: {} });
     const mergedFormats = {
@@ -326,8 +430,6 @@
       note: serverFormats.note,
       formats: { ...(serverFormats.formats || {}), ...(localF.formats || {}) },
     };
-    // If server is newer for a key not in local, already covered by spread order.
-    // Prefer local entirely for keys present locally (already done).
 
     const localW = loadLS(LS_WISHLIST, { items: [] });
     let wishlist;
@@ -342,28 +444,177 @@
       saveLS(LS_FORMATS, mergedFormats);
     }
 
+    const localM = loadLS(LS_MANUAL, { movies: [] });
+    const mergedManual = mergeManualLists(serverManual || { movies: [] }, localM);
+    if (!(localM.movies || []).length && (serverManual.movies || []).length) {
+      saveLS(LS_MANUAL, mergedManual);
+    }
+
     state.formatsOverlay = mergedFormats;
     state.wishlist = wishlist;
+    state.manualMovies = mergedManual;
+  }
+
+  function readAddFormFormats() {
+    const formats = {
+      plex: false,
+      uhd_disc: false,
+      bluray: false,
+      dvd: false,
+      vhs: false,
+      digital: false,
+    };
+    $$("#add-format-toggles input[data-fmt]").forEach((input) => {
+      formats[input.dataset.fmt] = !!input.checked;
+    });
+    return formats;
+  }
+
+  function applyFormatsToExisting(movie, formats) {
+    const key = movieKey(movie);
+    if (!state.formatsOverlay.formats[key]) state.formatsOverlay.formats[key] = {};
+    const over = state.formatsOverlay.formats[key];
+    for (const k of [...PHYSICAL_KEYS, "plex"]) {
+      if (formats[k]) over[k] = true;
+    }
+    if (formats.uhd_disc) delete over.uhd4k;
+    persistFormatsOverlay();
+    // Also merge onto movie.formats for immediate display when plex base is empty
+    if (!movie.formats) movie.formats = {};
+    for (const k of PHYSICAL_KEYS) {
+      if (formats[k]) movie.formats[k] = true;
+    }
+    if (formats.plex) movie.formats.plex = true;
+  }
+
+  function upsertManualMovie(entry) {
+    const id = entry.id;
+    const list = state.manualMovies.movies || (state.manualMovies.movies = []);
+    const idx = list.findIndex((m) => (m.id || manualId(m.title, m.year)) === id);
+    if (idx >= 0) list[idx] = entry;
+    else list.push(entry);
+    persistManualMovies();
+  }
+
+  function handleAddMovieSubmit(e) {
+    e.preventDefault();
+    const title = $("#add-title").value.trim();
+    if (!title) return;
+    const yearRaw = $("#add-year").value.trim();
+    const year = yearRaw ? Number(yearRaw) : null;
+    const studio = $("#add-studio").value.trim() || null;
+    const genres = $("#add-genres")
+      .value.split(",")
+      .map((g) => g.trim())
+      .filter(Boolean);
+    const animation = $("#add-animation").value || null;
+    const asWishlist = $("#add-as-wishlist").checked;
+    const formats = readAddFormFormats();
+
+    if (asWishlist) {
+      const existsWish = state.wishlist.items.some((w) => {
+        if (!titlesMatch(w.title, title)) return false;
+        if (year && w.year && Number(w.year) !== Number(year)) return false;
+        return true;
+      });
+      if (!existsWish) {
+        state.wishlist.items.push({
+          id: `wl-${Date.now()}`,
+          title,
+          year: year || null,
+          notes: "Manual add (wishlist)",
+        });
+        persistWishlist();
+      }
+      closeAddMovieModal();
+      renderList();
+      toast("Added to wishlist (local). Download wishlist JSON to commit.");
+      return;
+    }
+
+    const existing = findByTitleYear(title, year);
+    if (existing) {
+      const fromPlex = !!existing.plex_rating_key && existing.source !== "manual";
+      const msg = fromPlex
+        ? `"${title}" (${year || "—"}) is already in the Plex catalog. Update formats on the existing entry instead of duplicating?`
+        : `"${title}" (${year || "—"}) already exists. Update formats on the existing entry instead of duplicating?`;
+      if (window.confirm(msg)) {
+        applyFormatsToExisting(existing, formats);
+        if (animation && existing.source === "manual") {
+          existing.animation = animation;
+          const mid = existing.id || manualId(existing.title, existing.year);
+          const stored = (state.manualMovies.movies || []).find((m) => (m.id || "") === mid);
+          if (stored) {
+            stored.animation = animation;
+            if (studio) stored.studio = studio;
+            if (genres.length) stored.genres = genres;
+            persistManualMovies();
+          }
+        }
+        closeAddMovieModal();
+        renderList();
+        openModal(existing);
+        toast("Formats updated on existing movie — download overlay JSON to commit.");
+        return;
+      }
+      toast("Add cancelled — existing title left unchanged.");
+      return;
+    }
+
+    const id = manualId(title, year);
+    const entry = {
+      id,
+      title,
+      year: year || null,
+      studio,
+      genres,
+      animation,
+      summary: "",
+      content_rating: null,
+      resolutions: [],
+      section: "Manual",
+      source: "manual",
+      formats: {
+        plex: !!formats.plex,
+        bluray: !!formats.bluray,
+        dvd: !!formats.dvd,
+        vhs: !!formats.vhs,
+        digital: !!formats.digital,
+        uhd_disc: !!formats.uhd_disc,
+        uhd4k: false,
+      },
+      added_at: String(Math.floor(Date.now() / 1000)),
+    };
+    upsertManualMovie(entry);
+    // Seed formats overlay so downloadable overlay includes manual ownership too
+    applyFormatsToExisting(entry, formats);
+    state.movies.push({ ...entry });
+    renderGenreOptions();
+    closeAddMovieModal();
+    renderList();
+    toast("Movie saved locally — download manual-movies.json to commit.");
   }
 
   async function loadData() {
-    const [moviesRes, formatsRes, wishRes] = await Promise.all([
+    const [moviesRes, formatsRes, wishRes, manualRes] = await Promise.all([
       fetch("data/movies.json"),
       fetch("data/formats-overlay.json"),
       fetch("data/wishlist.json"),
+      fetch("data/manual-movies.json"),
     ]);
     if (!moviesRes.ok) throw new Error("Failed to load data/movies.json");
     const moviesData = await moviesRes.json();
     const formatsData = formatsRes.ok ? await formatsRes.json() : { formats: {} };
     const wishData = wishRes.ok ? await wishRes.json() : { items: [] };
+    const manualData = manualRes.ok ? await manualRes.json() : { movies: [] };
 
     state.meta = {
       source: moviesData.source,
       imported_at: moviesData.imported_at,
       movie_count: moviesData.movie_count,
     };
-    state.movies = moviesData.movies || [];
-    mergeServerOverlays(formatsData, wishData);
+    mergeServerOverlays(formatsData, wishData, manualData);
+    rebuildMovieList(moviesData.movies || []);
   }
 
   function bind() {
@@ -448,7 +699,12 @@
       if (e.target === $("#modal-backdrop")) closeModal();
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeModal();
+      if (e.key !== "Escape") return;
+      if (!$("#add-movie-backdrop").classList.contains("hidden")) {
+        closeAddMovieModal();
+        return;
+      }
+      closeModal();
     });
 
     $("#format-toggles").addEventListener("change", (e) => {
@@ -489,7 +745,7 @@
     $("#btn-download-formats").addEventListener("click", () => {
       const payload = {
         updated_at: new Date().toISOString(),
-        note: "Physical ownership overlays keyed by plex_rating_key. uhd_disc = owned 4K UHD disc (separate from Plex file resolution).",
+        note: "Physical ownership overlays keyed by plex_rating_key (or manual id). uhd_disc = owned 4K UHD disc (separate from Plex file resolution).",
         formats: state.formatsOverlay.formats || {},
       };
       downloadJson("formats-overlay.json", payload);
@@ -505,8 +761,31 @@
       toast("Downloaded wishlist.json — replace data/wishlist.json and commit.");
     });
 
+    $("#btn-download-manual").addEventListener("click", () => {
+      const payload = {
+        updated_at: new Date().toISOString(),
+        note: "Manually added movies not (yet) in Plex. Merged with movies.json on load. Ids are manual-<slug>-<year>; localStorage wins for the same id.",
+        movies: state.manualMovies.movies || [],
+      };
+      downloadJson("manual-movies.json", payload);
+      toast("Downloaded manual-movies.json — replace data/manual-movies.json and commit.");
+    });
+
     $("#btn-export-modal-formats").addEventListener("click", () => {
       $("#btn-download-formats").click();
+    });
+
+    $("#btn-add-movie").addEventListener("click", openAddMovieModal);
+    $("#add-movie-close").addEventListener("click", closeAddMovieModal);
+    $("#add-movie-cancel").addEventListener("click", closeAddMovieModal);
+    $("#add-movie-backdrop").addEventListener("click", (e) => {
+      if (e.target === $("#add-movie-backdrop")) closeAddMovieModal();
+    });
+    $("#add-movie-form").addEventListener("submit", handleAddMovieSubmit);
+    $("#add-format-toggles").addEventListener("change", (e) => {
+      const input = e.target.closest("input[data-fmt]");
+      if (!input) return;
+      input.closest(".toggle").classList.toggle("on", input.checked);
     });
 
     $("#wishlist-add").addEventListener("submit", (e) => {

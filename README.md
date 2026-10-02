@@ -13,6 +13,7 @@ Browse ~995 titles imported from **Koch_Plex**, filter by year / genre / format,
 - **Cards or table** view
 - **Wishlist** — titles you want; stored in `localStorage` with downloadable JSON to commit
 - **Formats overlay** — click a movie → toggle physical formats; download JSON to commit
+- **Add movie** — manually add titles not in Plex yet (physical/digital only, or before rip); stored in `localStorage` + downloadable `data/manual-movies.json`
 
 ## Repo layout
 
@@ -21,7 +22,8 @@ index.html                 # Pages site root
 css/app.css
 js/app.js
 data/movies.json           # Plex import (do not put tokens here)
-data/formats-overlay.json  # Physical ownership overlays (keyed by plex_rating_key)
+data/manual-movies.json    # Manual adds (not yet in Plex); ids like manual-<slug>-<year>
+data/formats-overlay.json  # Physical ownership overlays (keyed by plex_rating_key / manual id)
 data/wishlist.json         # Committed wishlist baseline
 scripts/import_plex.py     # Re-import from Plex
 assets/                    # Theater background + logos
@@ -37,6 +39,18 @@ legacy/                    # Old PHP Bootstrap sketch (archived)
 5. Click **Download formats overlay JSON** → save as `data/formats-overlay.json` → commit & push so everyone sees them.
 
 > **Note:** A “Plex 4K file” badge means the Plex *file* is 4K resolution. That is **not** the same as owning a **4K UHD disc** — use the **4K Disc** toggle for shelf ownership.
+
+## Add a movie (not in Plex yet)
+
+1. Click **Add movie** on the main toolbar.
+2. Enter **title** (required), optional year / genres / studio / live-or-animated.
+3. Check formats you own (**4K Disc**, **Blu-ray**, **DVD**, **VHS**, **Digital**). **On Plex** defaults off.
+4. Optional: **Add to wishlist instead of owned catalog**.
+5. Save — stored in this browser immediately.
+6. If title+year already exists from Plex, you’ll be offered to **update formats** on that entry (no duplicate).
+7. **Download manual movies JSON** → save as `data/manual-movies.json` → commit & push.
+
+On load the app merges `data/movies.json` + `data/manual-movies.json` + `localStorage` (local wins for the same `manual-…` id). Plex re-import is unchanged.
 
 ## Wishlist
 

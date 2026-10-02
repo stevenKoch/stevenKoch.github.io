@@ -15,7 +15,7 @@
         <span class="tag">Family catalog · powered by <span id="source-name">Plex</span></span>
       </div>
       <p style="margin:0;color:#d8cdc2;max-width:42rem;">
-        Search what we already have on Plex, mark Blu-ray / DVD / VHS / 4K discs you own,
+        Search what we already have on Plex, add titles not on Plex yet, mark Blu-ray / DVD / VHS / 4K discs you own,
         and keep a wishlist for the next movie night.
       </p>
       <div class="stats">
@@ -60,8 +60,10 @@
         <button type="button" class="chip" id="chip-wishlist">Wishlist only</button>
       </div>
       <div class="toolbar-row">
+        <button type="button" class="btn primary" id="btn-add-movie">Add movie</button>
         <button type="button" class="btn" id="btn-download-formats">Download formats overlay JSON</button>
         <button type="button" class="btn" id="btn-download-wishlist">Download wishlist JSON</button>
+        <button type="button" class="btn" id="btn-download-manual">Download manual movies JSON</button>
       </div>
     </section>
 
@@ -139,6 +141,65 @@
         <button type="button" class="btn primary" id="btn-toggle-wish">Add to wishlist</button>
         <button type="button" class="btn" id="btn-export-modal-formats">Download formats overlay JSON</button>
       </div>
+    </div>
+  </div>
+
+  <div id="add-movie-backdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="add-movie-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="add-movie-title">Add movie</h2>
+        <button type="button" class="btn ghost" id="add-movie-close" aria-label="Close">✕</button>
+      </div>
+      <p class="hint" style="margin-top:0;">
+        For titles not in Plex yet (physical/digital only, or before rip). Saved in this browser;
+        download <code>manual-movies.json</code> and commit to share.
+      </p>
+      <form id="add-movie-form" class="add-movie-form">
+        <label class="field">
+          <span>Title <em>*</em></span>
+          <input id="add-title" name="title" required placeholder="Movie title" autocomplete="off" />
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>Year</span>
+            <input id="add-year" name="year" type="number" min="1900" max="2100" placeholder="YYYY" />
+          </label>
+          <label class="field">
+            <span>Studio</span>
+            <input id="add-studio" name="studio" placeholder="Optional" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Genre(s)</span>
+          <input id="add-genres" name="genres" placeholder="Comedy, Family (comma-separated)" />
+        </label>
+        <label class="field">
+          <span>Live / Animated</span>
+          <select id="add-animation" name="animation">
+            <option value="">—</option>
+            <option value="live">Live action</option>
+            <option value="animated">Animated</option>
+          </select>
+        </label>
+        <div class="section-label">Formats owned</div>
+        <div class="format-toggles" id="add-format-toggles">
+          <label class="toggle"><input type="checkbox" name="fmt_uhd_disc" data-fmt="uhd_disc" /><span>4K Disc</span></label>
+          <label class="toggle"><input type="checkbox" name="fmt_bluray" data-fmt="bluray" /><span>Blu-ray</span></label>
+          <label class="toggle"><input type="checkbox" name="fmt_dvd" data-fmt="dvd" /><span>DVD</span></label>
+          <label class="toggle"><input type="checkbox" name="fmt_vhs" data-fmt="vhs" /><span>VHS</span></label>
+          <label class="toggle"><input type="checkbox" name="fmt_digital" data-fmt="digital" /><span>Digital</span></label>
+          <label class="toggle"><input type="checkbox" name="fmt_plex" data-fmt="plex" /><span>On Plex</span></label>
+        </div>
+        <p class="hint">On Plex defaults off for manual adds (not ripped yet).</p>
+        <label class="toggle wishlist-opt" id="add-wishlist-toggle">
+          <input type="checkbox" id="add-as-wishlist" />
+          <span>Add to wishlist instead of owned catalog</span>
+        </label>
+        <div class="modal-actions">
+          <button type="submit" class="btn primary">Save movie</button>
+          <button type="button" class="btn ghost" id="add-movie-cancel">Cancel</button>
+        </div>
+      </form>
     </div>
   </div>
 
