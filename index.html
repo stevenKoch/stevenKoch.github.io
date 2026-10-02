@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Koch family movie catalog — browse Plex library, mark physical discs, track wishlist." />
+  <title>Koch Movie Database</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <div class="brand">
+        <h1>Koch Movie Database</h1>
+        <span class="tag">Family catalog · powered by <span id="source-name">Plex</span></span>
+      </div>
+      <p style="margin:0;color:#d8cdc2;max-width:42rem;">
+        Search what we already have on Plex, mark Blu-ray / DVD / VHS / 4K discs you own,
+        and keep a wishlist for the next movie night.
+      </p>
+      <div class="stats">
+        <div class="stat"><strong id="stat-total">0</strong> in library</div>
+        <div class="stat"><strong id="stat-shown">0</strong> showing</div>
+        <div class="stat"><strong id="stat-physical">0</strong> with physical discs</div>
+        <div class="stat"><strong id="stat-wishlist">0</strong> wishlist</div>
+        <div class="stat">Imported <strong id="stat-imported">—</strong></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="toolbar" aria-label="Filters">
+      <div class="toolbar-row">
+        <div class="search-wrap">
+          <label class="visually-hidden" for="filter-q" style="position:absolute;left:-9999px;">Search</label>
+          <input id="filter-q" type="search" placeholder="Search title, studio, genre…" autocomplete="off" />
+        </div>
+        <select id="filter-genre" aria-label="Genre">
+          <option value="">All genres</option>
+        </select>
+        <div class="year-range" title="Year range">
+          <input id="filter-year-min" type="number" inputmode="numeric" placeholder="From" min="1900" max="2100" />
+          <span>–</span>
+          <input id="filter-year-max" type="number" inputmode="numeric" placeholder="To" min="1900" max="2100" />
+        </div>
+        <div class="view-toggle" role="group" aria-label="View mode">
+          <button type="button" class="btn active" data-view="cards">Cards</button>
+          <button type="button" class="btn" data-view="table">Table</button>
+        </div>
+        <button type="button" class="btn ghost" id="btn-clear">Clear</button>
+      </div>
+      <div class="toolbar-row chip-row" aria-label="Format filters">
+        <button type="button" class="chip" data-format="plex">On Plex</button>
+        <button type="button" class="chip" data-format="plex_4k">Plex 4K file</button>
+        <button type="button" class="chip" data-format="uhd_disc">4K Disc</button>
+        <button type="button" class="chip" data-format="bluray">Blu-ray</button>
+        <button type="button" class="chip" data-format="dvd">DVD</button>
+        <button type="button" class="chip" data-format="vhs">VHS</button>
+        <button type="button" class="chip" data-format="digital">Digital</button>
+        <button type="button" class="chip" id="chip-wishlist">Wishlist only</button>
+      </div>
+      <div class="toolbar-row">
+        <button type="button" class="btn" id="btn-download-formats">Download formats overlay JSON</button>
+        <button type="button" class="btn" id="btn-download-wishlist">Download wishlist JSON</button>
+      </div>
+    </section>
+
+    <div class="meta-bar">
+      <div id="result-count">Loading…</div>
+      <div class="legend">
+        <span class="badge plex">On Plex</span>
+        <span class="badge res">Resolution</span>
+        <span class="badge disc">Physical / Digital</span>
+      </div>
+    </div>
+
+    <section id="movie-grid" class="grid" aria-live="polite"></section>
+
+    <div id="movie-table-wrap" class="table-wrap hidden">
+      <table class="movies">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Year</th>
+            <th>Genre</th>
+            <th>Studio</th>
+            <th>Plex res</th>
+            <th>Formats</th>
+          </tr>
+        </thead>
+        <tbody id="movie-table-body"></tbody>
+      </table>
+    </div>
+
+    <section class="panel" id="wishlist-panel">
+      <h2>Wishlist</h2>
+      <p class="hint" style="margin-top:0;">
+        Titles you want but don’t own yet. Saved in this browser; use
+        <strong>Download wishlist JSON</strong> then commit to <code>data/wishlist.json</code>.
+      </p>
+      <form class="wishlist-form" id="wishlist-add">
+        <input id="wish-title" required placeholder="Movie title" />
+        <input id="wish-year" type="number" min="1900" max="2100" placeholder="Year" />
+        <input id="wish-notes" class="notes" placeholder="Notes (optional)" />
+        <button type="submit" class="btn primary">Add</button>
+      </form>
+      <ul class="wishlist-list" id="wishlist-items"></ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Static GitHub Pages app. Plex import is read-only via
+      <code>scripts/import_plex.py</code> (token from env — never commit secrets).
+      Physical formats live in <code>data/formats-overlay.json</code> and are separate from
+      “Plex 4K file” resolution.
+    </p>
+    <p>Old PHP sketch archived under <code>legacy/</code>.</p>
+  </footer>
+
+  <div id="modal-backdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Movie</h2>
+        <button type="button" class="btn ghost" id="modal-close" aria-label="Close">✕</button>
+      </div>
+      <p class="sub" id="modal-sub"></p>
+      <p class="summary" id="modal-summary"></p>
+      <p class="hint" id="modal-res"></p>
+
+      <div class="section-label">Physical &amp; purchase formats</div>
+      <div class="format-toggles" id="format-toggles"></div>
+      <p class="hint">
+        Toggle what you own on the shelf or as a digital purchase.
+        Changes save in this browser immediately. Download the overlay JSON and commit it so the family site stays in sync.
+      </p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn primary" id="btn-toggle-wish">Add to wishlist</button>
+        <button type="button" class="btn" id="btn-export-modal-formats">Download formats overlay JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="js/app.js" defer></script>
+</body>
+</html>

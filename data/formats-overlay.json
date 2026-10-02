@@ -1,0 +1,5 @@
+{
+  "updated_at": null,
+  "note": "Physical ownership overlays keyed by plex_rating_key. Merge with movies.json formats for display. uhd_disc = owned 4K UHD disc (separate from Plex file resolution).",
+  "formats": {}
+}
