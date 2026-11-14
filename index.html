@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="description" content="The Koch family film library — everything on Plex and on the shelf, from 4K discs to Daughter's VHS." />
+  <meta name="description" content="Do we already own it? Search the Koch family movie collection — Plex, 4K, Blu-ray, DVD and VHS." />
   <meta name="theme-color" content="#0b0b0f" />
   <title>Koch Movie Database</title>
   <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
@@ -24,13 +24,6 @@
           <span class="brand-sub">Movie Database</span>
         </span>
       </a>
-
-      <div class="search">
-        <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <label class="visually-hidden" for="filter-q">Search the library</label>
-        <input id="filter-q" type="search" placeholder="Search titles, studios, genres" autocomplete="off" spellcheck="false" />
-        <kbd class="search-kbd" aria-hidden="true">/</kbd>
-      </div>
 
       <nav class="top-actions" aria-label="Library actions">
         <button type="button" class="btn ghost icon-btn" id="btn-open-wishlist" aria-haspopup="dialog">
@@ -56,23 +49,36 @@
         </button>
       </nav>
     </div>
+
+    <div class="searchhero" role="search">
+      <div class="searchhero-inner">
+        <h1 class="search-question">Do we already own it?</h1>
+        <div class="bigsearch">
+          <svg class="bigsearch-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <label class="visually-hidden" for="filter-q">Search the movies we own</label>
+          <input id="filter-q" type="search" placeholder="Type a movie title…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" autofocus />
+          <button type="button" class="bigsearch-clear" id="btn-clear-q" aria-label="Clear search" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+          <button type="button" class="btn filters-toggle" id="btn-filters" aria-expanded="false" aria-controls="filterbar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            <span class="btn-label">Filters</span>
+            <span class="count-pill" id="filters-count" hidden>0</span>
+          </button>
+        </div>
+        <p class="search-help">
+          <span><strong id="stat-total">—</strong> movies</span>
+          <span><strong id="stat-physical">—</strong> on the shelf</span>
+          <span><strong id="stat-vhs">—</strong> Daughter's VHS</span>
+          <span class="help-import">Plex import <strong id="stat-imported">—</strong></span>
+          <span class="visually-hidden">Source: <span id="source-name">Plex</span></span>
+        </p>
+      </div>
+    </div>
   </header>
 
-  <section class="hero" id="hero" aria-label="Library overview">
-    <div class="hero-art" id="hero-art" aria-hidden="true"></div>
-    <div class="hero-inner">
-      <p class="eyebrow">The family library · from <span id="source-name">Plex</span></p>
-      <h1 class="hero-title">Every movie we own, <em>in one place.</em></h1>
-      <dl class="hero-stats">
-        <div><dt>Titles</dt><dd id="stat-total">—</dd></div>
-        <div><dt>On the shelf</dt><dd id="stat-physical">—</dd></div>
-        <div><dt>Daughter's VHS</dt><dd id="stat-vhs">—</dd></div>
-        <div><dt>Last Plex import</dt><dd id="stat-imported">—</dd></div>
-      </dl>
-    </div>
-  </section>
 
-  <div class="filterbar" id="filterbar">
+  <div class="filterbar" id="filterbar" hidden>
     <div class="filterbar-inner">
       <div class="chip-scroll" role="group" aria-label="Collections and formats">
         <button type="button" class="chip chip-feature" id="chip-collection" data-collection="Daughter's VHS" aria-pressed="false">
@@ -186,6 +192,7 @@
           <p class="hint">Saves in this browser right away. Use <strong>Export → Formats overlay</strong> to share it.</p>
 
           <div class="modal-actions">
+            <a class="btn radarr" id="modal-radarr" target="_blank" rel="noopener" hidden>Get a digital copy in Radarr</a>
             <button type="button" class="btn primary" id="btn-toggle-wish">Add to wishlist</button>
             <button type="button" class="btn ghost" id="btn-export-modal-formats">Download formats overlay</button>
           </div>

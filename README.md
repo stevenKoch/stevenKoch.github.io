@@ -8,6 +8,10 @@ Browse ~995 titles imported from **Koch_Plex**, filter by year / genre / format,
 
 ## Features
 
+- **Do we already own it?** — the big search box at the top is the point of the site. It matches as you type and forgives case, accents, a leading “The/A/An”, punctuation, “&” vs “and”, Roman numerals (II ↔ 2), small typos, and a year (`lion king 1994`). Every hit says **We own this** with format badges (Plex digital + resolution, 4K disc, Blu-ray, DVD, VHS, Daughter's VHS).
+- **Not owned?** — “Not in the collection” offers **Look it up in Radarr**, which opens Radarr's own add-movie search (`http://100.65.30.111:30025/add/new?term=…`, Tailscale/home network only, no API key in the site). Titles that are only on disc or only on the wishlist get a **Get a digital copy in Radarr** link.
+- **Filters** live behind the **Filters** button next to search.
+
 - **Browse** — search title/studio/genre; filter by year range, genre, and format chips
 - **On Plex vs physical** — “On Plex” and resolution badges come from the Plex import; **4K Disc / Blu-ray / DVD / VHS / Digital** are ownership flags you edit. A **Daughter's VHS** collection tag marks tapes on that shelf (filter chip on the toolbar).
 - **Poster grid or list** view, sort by title / recently added / year, live facet counts on every chip

@@ -38,6 +38,177 @@
 
   const TMDB_IMG = "https://image.tmdb.org/t/p/";
   const COLLECTION_VHS = "Daughter's VHS";
+  // Radarr WebUI on the NAS, reachable over Tailscale. No API key: this only opens Radarr's own add-movie search.
+  const RADARR_URL = "http://100.65.30.111:30025";
+  const SEARCH_PAGE = 40;
+
+  function radarrUrl(term) {
+    return `${RADARR_URL}/add/new?term=${encodeURIComponent(String(term || "").trim())}`;
+  }
+
+  /* ---------- Forgiving search ---------- */
+
+  const STOP = new Set(["the", "a", "an", "and", "of"]);
+
+  /** lowercase, strip accents, & → and, drop apostrophes, other punctuation → space. */
+  function normText(str) {
+    return String(str || "")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/['’`]/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/\b(ii|iii|iv|vi|vii|viii)\b/g, (r) => ROMAN[r])
+      .trim();
+  }
+
+  const ROMAN = { ii: "2", iii: "3", iv: "4", vi: "6", vii: "7", viii: "8" };
+
+  function coreOf(n) {
+    return n.split(" ").filter((w) => w && !STOP.has(w)).join(" ");
+  }
+
+  function stripArticle(n) {
+    return n.replace(/^(the|a|an) /, "");
+  }
+
+  /** Optimal string alignment distance, bailing out once it exceeds max. */
+  function editDistance(a, b, max) {
+    if (a === b) return 0;
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    let prev2 = null;
+    let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      const cur = [i];
+      let rowMin = i;
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        let v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+        if (prev2 && i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) v = Math.min(v, prev2[j - 2] + 1);
+        cur[j] = v;
+        if (v < rowMin) rowMin = v;
+      }
+      if (rowMin > max) return max + 1;
+      prev2 = prev;
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+
+  function allowedTypos(len) {
+    return len >= 9 ? 2 : len >= 5 ? 1 : 0;
+  }
+
+  function searchIndex(movie) {
+    if (movie._idx) return movie._idx;
+    const title = stripArticle(normText(movie.title));
+    const extra = normText(`${movie.studio || ""} ${(movie.genres || []).join(" ")} ${movieCollection(movie) || ""}`);
+    movie._idx = {
+      title,
+      compact: title.replace(/ /g, ""),
+      core: coreOf(title),
+      words: title.split(" ").filter(Boolean),
+      extraWords: extra.split(" ").filter(Boolean),
+      year: movie.year ? Number(movie.year) : null,
+    };
+    return movie._idx;
+  }
+
+  function parseQuery(raw) {
+    let n = normText(raw);
+    let year = null;
+    const m = n.match(/(?:^| )((?:19|20)\d\d)$/) || n.match(/^((?:19|20)\d\d) /);
+    if (m && n !== m[1]) {
+      year = Number(m[1]);
+      n = n.replace(m[0], " ").trim();
+    } else if (m) {
+      year = Number(m[1]); // query is only a year: match titles from that year (or containing it)
+      n = "";
+    }
+    n = stripArticle(n);
+    const tokens = n.split(" ").filter(Boolean);
+    const core = tokens.filter((t) => !STOP.has(t));
+    return { raw: String(raw || "").trim(), text: n, core: coreOf(n), compact: n.replace(/ /g, ""), tokens: core.length ? core : tokens, year };
+  }
+
+  /** How well one query word matches a list of words: 3 exact, 2 prefix, 1 typo, 0 none. */
+  function wordMatch(q, words, last) {
+    let best = 0;
+    const maxTypos = allowedTypos(q.length);
+    for (const w of words) {
+      if (w === q) return 3;
+      if (w.startsWith(q) && (last || q.length >= 3)) best = Math.max(best, 2);
+      else if (maxTypos && best < 1) {
+        if (editDistance(q, w, maxTypos) <= maxTypos) best = 1;
+        else if (last && q.length >= 5 && w.length > q.length && editDistance(q, w.slice(0, q.length), maxTypos) <= maxTypos) best = 1;
+      }
+    }
+    return best;
+  }
+
+  /** 0 = no match; higher = better. */
+  function searchScore(movie, q) {
+    const idx = searchIndex(movie);
+    let yearBonus = 0;
+    if (q.year) {
+      if (idx.year === q.year) yearBonus = 25;
+      else if (!idx.title.includes(String(q.year))) return 0;
+    }
+    if (!q.tokens.length) return q.year ? 50 + yearBonus : 0;
+
+    if (idx.title === q.text) return 100 + yearBonus;
+    if (q.core && idx.core === q.core) return 95 + yearBonus;
+    if (idx.title.startsWith(q.text)) return 85 + yearBonus - Math.min(10, idx.title.length - q.text.length) / 2;
+    if (q.compact.length >= 4 && idx.compact.includes(q.compact)) return 70 + yearBonus;
+
+    let total = 0;
+    let typos = 0;
+    let extraHits = 0;
+    for (let i = 0; i < q.tokens.length; i++) {
+      const t = q.tokens[i];
+      const last = i === q.tokens.length - 1;
+      const m = wordMatch(t, idx.words, last);
+      if (m) {
+        total += m;
+        if (m === 1) typos++;
+        continue;
+      }
+      // studio / genre / collection words: exact or prefix only
+      if (t.length >= 3 && idx.extraWords.some((w) => w === t || w.startsWith(t))) {
+        extraHits++;
+        continue;
+      }
+      return 0;
+    }
+    if (extraHits === q.tokens.length) return 10 + (yearBonus ? 5 : 0); // studio/genre/collection only
+    if (extraHits) return Math.max(20, 40 + (total / (q.tokens.length * 3)) * 20 - typos * 4 - extraHits * 6 + yearBonus);
+    // Whole-title typo match ("pinochio" → "pinocchio")
+    return 40 + (total / (q.tokens.length * 3)) * 20 - typos * 4 - extraHits * 6 + yearBonus;
+  }
+
+  const scoreCache = { q: null, parsed: null, scores: new Map() };
+
+  function queryScore(movie) {
+    const raw = state.filters.q.trim();
+    if (scoreCache.q !== raw) {
+      scoreCache.q = raw;
+      scoreCache.parsed = parseQuery(raw);
+      scoreCache.scores = new Map();
+    }
+    const key = movieKey(movie);
+    let sc = scoreCache.scores.get(key);
+    if (sc === undefined) {
+      sc = searchScore(movie, scoreCache.parsed);
+      scoreCache.scores.set(key, sc);
+    }
+    return sc;
+  }
+
+  function invalidateSearch() {
+    scoreCache.q = null;
+    state.movies.forEach((m) => delete m._idx);
+  }
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -141,11 +312,7 @@
 
   function matchesFilters(movie) {
     const f = state.filters;
-    const q = f.q.trim().toLowerCase();
-    if (q) {
-      const hay = `${movie.title} ${movie.studio || ""} ${(movie.genres || []).join(" ")} ${movieCollection(movie) || ""}`.toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
+    if (f.q.trim() && !queryScore(movie)) return false;
     if (f.genre && !(movie.genres || []).includes(f.genre)) return false;
     if (f.yearMin && (movie.year == null || movie.year < Number(f.yearMin))) return false;
     if (f.yearMax && (movie.year == null || movie.year > Number(f.yearMax))) return false;
@@ -284,6 +451,11 @@
     return Number(n).toLocaleString("en-US");
   }
 
+  function activeFilterCount() {
+    const f = state.filters;
+    return f.formats.size + (f.genre ? 1 : 0) + (f.yearMin || f.yearMax ? 1 : 0) + (f.wishlistOnly ? 1 : 0) + (f.collection ? 1 : 0);
+  }
+
   function hasActiveFilters() {
     const f = state.filters;
     return !!(f.q.trim() || f.genre || f.yearMin || f.yearMax || f.formats.size || f.wishlistOnly || f.collection);
@@ -311,18 +483,19 @@
     $("#stat-imported").textContent = importedText;
 
     const f = state.filters;
-    let heading = "All movies";
-    if (f.collection) heading = f.collection;
+    let heading = "Browse everything we own";
+    if (f.q.trim()) heading = `Searching for “${f.q.trim()}”`;
+    else if (f.collection) heading = f.collection;
     else if (f.wishlistOnly) heading = "Wishlist";
     else if (f.genre) heading = f.genre;
-    else if (f.q.trim()) heading = `Results for “${f.q.trim()}”`;
+    else if (f.q.trim()) heading = `Searching for “${f.q.trim()}”`;
     else if (f.formats.size === 1) {
       const c = $(`.chip[data-format="${[...f.formats][0]}"]`);
       heading = c ? c.firstChild.textContent.trim() : "Filtered";
     } else if (hasActiveFilters()) heading = "Filtered";
     $("#result-count").innerHTML = `${escapeHtml(heading)}<span class="of">${fmtNum(shown)} of ${fmtNum(total)}</span>`;
     $("#active-filters").innerHTML = hasActiveFilters()
-      ? `<button type="button" class="clear-link" data-clear>Clear all filters</button>`
+      ? `<button type="button" class="clear-link" data-clear>${activeFilterCount() ? "Clear search and filters" : "Clear search"}</button>`
       : "";
   }
 
@@ -434,10 +607,170 @@
       .join("");
   }
 
+  const CHECK_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>`;
+  const X_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>`;
+
+  /** Ownership badges, in the order people think about them. */
+  function ownershipBadges(movie) {
+    const fmt = effectiveFormats(movie);
+    const out = [];
+    if (fmt.plex) {
+      const res = (movie.resolutions || []).map((r) => {
+        const v = String(r).toLowerCase();
+        return v === "4k" ? "4K" : /^\d+$/.test(v) ? `${v}p` : v.toUpperCase();
+      });
+      out.push(`<span class="fmt plex">Plex digital${res.length ? ` <small>${escapeHtml(res.join(" · "))}</small>` : ""}</span>`);
+    } else if (fmt.digital) {
+      out.push(`<span class="fmt">Digital purchase</span>`);
+    }
+    if (fmt.uhd_disc) out.push(`<span class="fmt uhd">4K disc</span>`);
+    if (fmt.bluray) out.push(`<span class="fmt">Blu-ray</span>`);
+    if (fmt.dvd) out.push(`<span class="fmt">DVD</span>`);
+    if (fmt.vhs) out.push(`<span class="fmt vhs">VHS</span>`);
+    if (movieCollection(movie) === COLLECTION_VHS) out.push(`<span class="fmt dvhs">Daughter's VHS</span>`);
+    else if (movieCollection(movie)) out.push(`<span class="fmt">${escapeHtml(movieCollection(movie))}</span>`);
+    if (!out.length) out.push(`<span class="fmt manual">Listed — no formats marked yet</span>`);
+    return out.join("");
+  }
+
+  function ownedCount(movie) {
+    const f = effectiveFormats(movie);
+    return (f.plex ? 1 : 0) + (f.uhd_disc ? 1 : 0) + (f.bluray ? 1 : 0) + (f.dvd ? 1 : 0) + (f.vhs ? 1 : 0) + (movie.year ? 0.5 : 0);
+  }
+
+  function needsDigital(movie) {
+    return !effectiveFormats(movie).plex;
+  }
+
+  function radarrButton(term, label = "Get a digital copy in Radarr") {
+    return `<a class="btn radarr" href="${escapeHtml(radarrUrl(term))}" target="_blank" rel="noopener" title="Opens Radarr on the NAS (home network or Tailscale)">${escapeHtml(label)}</a>`;
+  }
+
+  function matchingWishlist(q) {
+    if (!q.tokens.length && !q.year) return [];
+    return (state.wishlist.items || []).filter((w) => {
+      if (state.movies.some((m) => titlesMatch(m.title, w.title))) return false;
+      return searchScore({ title: w.title, year: w.year, genres: [], _wish: true }, q) > 0;
+    });
+  }
+
+  let searchLimit = SEARCH_PAGE;
+
+  function renderSearch(list) {
+    const root = $("#movie-grid");
+    root.className = "answer-list";
+    const q = scoreCache.parsed || parseQuery(state.filters.q);
+    const raw = escapeHtml(q.raw);
+    const wishes = matchingWishlist(q);
+    let html = "";
+
+    if (!list.length) {
+      const narrowed = hasActiveFilters() && (state.filters.formats.size || state.filters.genre || state.filters.collection || state.filters.wishlistOnly || state.filters.yearMin || state.filters.yearMax);
+      html += `<div class="verdict no" role="status">
+        <span class="verdict-icon">${X_SVG}</span>
+        <div class="verdict-text">
+          <h3>Not in the collection</h3>
+          <p>Nothing we own matches “${raw}”${narrowed ? " with the current filters" : ""}. Check the spelling, or grab it in Radarr.</p>
+        </div>
+        ${radarrButton(q.raw, "Look it up in Radarr")}
+      </div>`;
+      if (narrowed) html += `<div class="more-row"><button type="button" class="btn" data-clear-filters>Search without filters</button></div>`;
+    } else {
+      const top = list[0];
+      const topScore = queryScore(top);
+      const second = list[1] ? queryScore(list[1]) : 0;
+      const yearOnly = !q.tokens.length;
+      const exact = topScore >= 50;
+      const related = topScore < 18; // only studio / genre / collection words matched
+      const strong = !yearOnly && exact && (topScore >= 60 || list.length === 1 || topScore - second >= 15);
+      const label = `${escapeHtml(top.title)}${top.year ? ` (${top.year})` : ""}`;
+      if (related) {
+        html += `<div class="verdict no" role="status">
+          <span class="verdict-icon">${X_SVG}</span>
+          <div class="verdict-text">
+            <h3>No title called “${raw}” in the collection</h3>
+            <p>Below are ${fmtNum(list.length)} movies we own whose studio, genre or collection matches.</p>
+          </div>
+          ${radarrButton(q.raw, "Look it up in Radarr")}
+        </div>`;
+      } else html += `<div class="verdict ${exact || yearOnly ? "yes" : "maybe"}" role="status">
+        <span class="verdict-icon">${CHECK_SVG}</span>
+        <div class="verdict-text">
+          <h3>${
+            yearOnly
+              ? `We own ${fmtNum(list.length)} ${list.length === 1 ? "movie" : "movies"} from ${q.year}`
+              : strong
+                ? `Yes — we own ${label}`
+                : !exact
+                  ? `Did you mean ${label}? We own it.`
+                  : `We own ${fmtNum(list.length)} movies matching “${raw}”`
+          }</h3>
+          <p>${
+            !exact && !yearOnly
+              ? `No exact match for “${raw}”, so these are the closest titles we own.${list.length > 1 ? ` ${fmtNum(list.length)} close matches.` : ""}`
+              : strong && list.length > 1
+                ? `Plus ${fmtNum(list.length - 1)} more ${list.length - 1 === 1 ? "match" : "matches"} below.`
+                : "Formats we have are listed on each title."
+          }</p>
+        </div>
+        ${!exact && !yearOnly ? radarrButton(q.raw, "Not it? Look it up in Radarr") : ""}
+      </div>`;
+      html += list
+        .slice(0, searchLimit)
+        .map((m, i) => {
+          const key = movieKey(m);
+          return `<article class="own-row${i === 0 && strong ? " top" : ""}" data-key="${escapeHtml(key)}" tabindex="0" role="button" aria-label="${escapeHtml(`${m.title}${m.year ? ` (${m.year})` : ""}`)}: we own it">
+            <div class="own-thumb">${artHtml(m, "w154")}</div>
+            <div class="own-main">
+              <h3 class="own-title">${escapeHtml(m.title)}${m.year ? `<span class="yr">${m.year}</span>` : ""}</h3>
+              <p class="own-status">${CHECK_SVG}We own this${related ? ` <span class="why">· ${escapeHtml(m.studio || (m.genres || []).join(", ") || "")}</span>` : ""}</p>
+              <div class="own-badges">${ownershipBadges(m)}</div>
+            </div>
+            <div class="own-actions">${needsDigital(m) ? radarrButton(`${m.title}${m.year ? ` ${m.year}` : ""}`) : ""}</div>
+          </article>`;
+        })
+        .join("");
+      if (list.length > searchLimit) {
+        html += `<div class="more-row"><button type="button" class="btn" data-more>Show ${fmtNum(Math.min(SEARCH_PAGE, list.length - searchLimit))} more of ${fmtNum(list.length - searchLimit)}</button></div>`;
+      }
+    }
+
+    if (wishes.length) {
+      html += wishes
+        .map(
+          (w) => `<article class="own-row wish-row">
+            <div class="own-thumb">${placeholderHtml(w)}</div>
+            <div class="own-main">
+              <h3 class="own-title">${escapeHtml(w.title)}${w.year ? `<span class="yr">${escapeHtml(w.year)}</span>` : ""}</h3>
+              <p class="own-status wish">On the wishlist — not owned yet</p>
+              ${w.notes ? `<div class="own-badges"><span class="fmt">${escapeHtml(w.notes)}</span></div>` : ""}
+            </div>
+            <div class="own-actions">${radarrButton(`${w.title}${w.year ? ` ${w.year}` : ""}`)}</div>
+          </article>`
+        )
+        .join("");
+    }
+    html += `<p class="search-note">Radarr links open the NAS on your home network or Tailscale.</p>`;
+    root.innerHTML = html;
+  }
+
   function renderList() {
-    const list = sortList(filteredMovies());
+    const searching = !!state.filters.q.trim();
+    let list = filteredMovies();
+    list = searching ? list.sort((a, b) => queryScore(b) - queryScore(a) || ownedCount(b) - ownedCount(a) || sortTitle(a.title).localeCompare(sortTitle(b.title))) : sortList(list);
     renderStats(list.length);
     renderChipCounts();
+    $("#btn-clear-q").hidden = !searching;
+    const nFilters = activeFilterCount();
+    $("#filters-count").hidden = !nFilters;
+    $("#filters-count").textContent = String(nFilters);
+    if (searching) {
+      $("#movie-grid").classList.remove("hidden");
+      $("#movie-table-wrap").classList.add("hidden");
+      renderSearch(list);
+      return;
+    }
+    $("#movie-grid").className = "poster-grid";
     if (state.view === "cards") {
       $("#movie-grid").classList.remove("hidden");
       $("#movie-table-wrap").classList.add("hidden");
@@ -447,17 +780,6 @@
       $("#movie-table-wrap").classList.remove("hidden");
       renderTable(list);
     }
-  }
-
-  function renderHero() {
-    const pick = state.movies
-      .filter((m) => posterUrl(m))
-      .sort((a, b) => Number(b.added_at || 0) - Number(a.added_at || 0))
-      .slice(0, 24);
-    if (!pick.length) return;
-    $("#hero-art").innerHTML = `<div class="hero-strip">${pick
-      .map((m) => `<img src="${posterUrl(m, "w185")}" alt="" loading="lazy" decoding="async" />`)
-      .join("")}</div>`;
   }
 
   function renderSkeleton() {
@@ -553,6 +875,10 @@
         <span>${PHYSICAL_LABELS[k]}</span>
       </label>`;
     }).join("");
+
+    const radarr = $("#modal-radarr");
+    radarr.hidden = !needsDigital(movie);
+    radarr.href = radarrUrl(`${movie.title}${movie.year ? ` ${movie.year}` : ""}`);
 
     const wishBtn = $("#btn-toggle-wish");
     wishBtn.textContent = isWishlisted(movie) ? "Remove from wishlist" : "Add to wishlist";
@@ -835,6 +1161,7 @@
     // Seed formats overlay so downloadable overlay includes manual ownership too
     applyFormatsToExisting(entry, formats);
     state.movies.push({ ...entry });
+    invalidateSearch();
     renderGenreOptions();
     closeAddMovieModal();
     renderList();
@@ -894,8 +1221,35 @@
     let qTimer;
     $("#filter-q").addEventListener("input", (e) => {
       state.filters.q = e.target.value;
+      searchLimit = SEARCH_PAGE;
+      $("#btn-clear-q").hidden = !e.target.value.trim();
       clearTimeout(qTimer);
-      qTimer = setTimeout(renderList, 110);
+      qTimer = setTimeout(() => {
+        renderList();
+        if (window.scrollY > 0) window.scrollTo({ top: 0 });
+      }, 60);
+    });
+    $("#filter-q").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const first = $("#movie-grid .own-row[data-key]");
+        if (first) first.focus();
+      } else if (e.key === "Escape" && e.target.value) {
+        e.stopPropagation();
+        e.target.value = "";
+        state.filters.q = "";
+        renderList();
+      }
+    });
+    $("#btn-clear-q").addEventListener("click", () => {
+      $("#filter-q").value = "";
+      state.filters.q = "";
+      renderList();
+      $("#filter-q").focus();
+    });
+    $("#btn-filters").addEventListener("click", () => {
+      const bar = $("#filterbar");
+      bar.hidden = !bar.hidden;
+      $("#btn-filters").setAttribute("aria-expanded", String(!bar.hidden));
     });
     $("#genre-chips").addEventListener("click", (e) => {
       const chip = e.target.closest("[data-genre]");
@@ -944,6 +1298,17 @@
 
     document.addEventListener("click", (e) => {
       if (e.target.closest("[data-clear]")) clearFilters();
+      if (e.target.closest("[data-clear-filters]")) {
+        const q = state.filters.q;
+        clearFilters();
+        state.filters.q = q;
+        $("#filter-q").value = q;
+        renderList();
+      }
+      if (e.target.closest("[data-more]")) {
+        searchLimit += SEARCH_PAGE;
+        renderList();
+      }
       const menu = $("#sync-menu");
       if (menu.open && !e.target.closest("#sync-menu")) menu.open = false;
     });
@@ -998,14 +1363,18 @@
       }
     });
 
-    const filterbar = $("#filterbar");
-    const onScroll = () => filterbar.classList.toggle("stuck", filterbar.getBoundingClientRect().top <= $("#topbar").offsetHeight + 1);
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y > 140) document.body.classList.add("compact");
+      else if (y < 10) document.body.classList.remove("compact");
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     const syncTopbar = () => document.documentElement.style.setProperty("--topbar-h", `${$("#topbar").offsetHeight}px`);
     window.addEventListener("resize", syncTopbar);
     syncTopbar();
 
     $("#movie-grid").addEventListener("click", (e) => {
+      if (e.target.closest("a, button")) return;
       const card = e.target.closest("[data-key]");
       if (!card) return;
       const m = state.movies.find((x) => movieKey(x) === card.dataset.key);
@@ -1013,6 +1382,7 @@
     });
     $("#movie-grid").addEventListener("keydown", (e) => {
       if (e.key !== "Enter" && e.key !== " ") return;
+      if (e.target.closest("a, button")) return;
       const card = e.target.closest("[data-key]");
       if (!card) return;
       e.preventDefault();
@@ -1173,9 +1543,15 @@
       await loadData();
       renderGenreOptions();
       renderWishlist();
-      renderHero();
       renderList();
       $("#source-name").textContent = state.meta.source || "Plex";
+      const params = new URLSearchParams(location.search);
+      if (params.get("q")) {
+        $("#filter-q").value = params.get("q");
+        state.filters.q = params.get("q");
+        renderList();
+      }
+      if (!matchMedia("(hover: none)").matches) $("#filter-q").focus();
     } catch (err) {
       console.error(err);
       $("#movie-grid").innerHTML = `<div class="empty"><h3>Couldn’t load the library</h3><p>Check that <code>data/movies.json</code> is reachable, then refresh.</p></div>`;
