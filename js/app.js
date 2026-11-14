@@ -29,9 +29,15 @@
       wishlistOnly: false,
       collection: "",
     },
+    sort: "title",
     view: "cards",
     selectedKey: null,
+    posters: {},
+    firstRender: true,
   };
+
+  const TMDB_IMG = "https://image.tmdb.org/t/p/";
+  const COLLECTION_VHS = "Daughter's VHS";
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -165,29 +171,6 @@
     return state.movies.filter(matchesFilters);
   }
 
-  function formatBadges(movie) {
-    const fmt = effectiveFormats(movie);
-    const bits = [];
-    if (movie.source === "manual" || (movie.id && String(movie.id).startsWith("manual-"))) {
-      bits.push(`<span class="badge manual">Manual</span>`);
-    }
-    if (fmt.plex) bits.push(`<span class="badge plex">On Plex</span>`);
-    for (const r of movie.resolutions || []) {
-      bits.push(`<span class="badge res">${escapeHtml(String(r).toUpperCase())}</span>`);
-    }
-    if (fmt.uhd_disc) bits.push(`<span class="badge disc">4K Disc</span>`);
-    if (fmt.bluray) bits.push(`<span class="badge disc">Blu-ray</span>`);
-    if (fmt.dvd) bits.push(`<span class="badge disc">DVD</span>`);
-    if (fmt.vhs) bits.push(`<span class="badge disc">VHS</span>`);
-    if (fmt.digital) bits.push(`<span class="badge disc">Digital</span>`);
-    if (movie.animation === "live") bits.push(`<span class="badge anim">Live</span>`);
-    if (movie.animation === "animated") bits.push(`<span class="badge anim">Animated</span>`);
-    const collection = movieCollection(movie);
-    if (collection) bits.push(`<span class="badge collection">${escapeHtml(collection)}</span>`);
-    if (isWishlisted(movie)) bits.push(`<span class="badge wish">Wishlist</span>`);
-    return bits.join("");
-  }
-
   function escapeHtml(s) {
     return String(s)
       .replace(/&/g, "&amp;")
@@ -196,80 +179,265 @@
       .replace(/"/g, "&quot;");
   }
 
-  function renderStats() {
+  function isManual(movie) {
+    return movie.source === "manual" || (movie.id && String(movie.id).startsWith("manual-"));
+  }
+
+  function posterInfo(movie) {
+    return state.posters[movieKey(movie)] || null;
+  }
+
+  function posterUrl(movie, size = "w342") {
+    const p = posterInfo(movie);
+    return p && p.poster ? `${TMDB_IMG}${size}${p.poster}` : null;
+  }
+
+  function backdropUrl(movie, size = "w1280") {
+    const p = posterInfo(movie);
+    return p && p.backdrop ? `${TMDB_IMG}${size}${p.backdrop}` : null;
+  }
+
+  /** Stable hue per title for generated placeholder art. */
+  function titleHue(title) {
+    let h = 0;
+    for (const ch of String(title || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return h % 360;
+  }
+
+  function placeholderHtml(movie) {
+    return `<div class="ph" style="--h:${titleHue(movie.title)}">
+      <span class="ph-mark">Koch</span>
+      <span class="ph-title">${escapeHtml(movie.title)}</span>
+      <span class="ph-year">${movie.year || "—"}</span>
+    </div>`;
+  }
+
+  function artHtml(movie, size, alt = "") {
+    const url = posterUrl(movie, size);
+    if (!url) return placeholderHtml(movie);
+    return `<img src="${url}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" />`;
+  }
+
+  function formatPills(movie) {
+    const fmt = effectiveFormats(movie);
+    const bits = [];
+    if (isManual(movie)) bits.push(`<span class="pill manual">Manual</span>`);
+    if (fmt.plex) bits.push(`<span class="pill plex">Plex</span>`);
+    if (fmt.uhd_disc) bits.push(`<span class="pill">4K Disc</span>`);
+    if (fmt.bluray) bits.push(`<span class="pill">Blu-ray</span>`);
+    if (fmt.dvd) bits.push(`<span class="pill">DVD</span>`);
+    if (fmt.vhs) bits.push(`<span class="pill vhs">VHS</span>`);
+    if (fmt.digital) bits.push(`<span class="pill">Digital</span>`);
+    return bits.join("");
+  }
+  // Back-compat name used by the table view.
+  const formatBadges = formatPills;
+
+  function posterFlags(movie) {
+    const fmt = effectiveFormats(movie);
+    const flags = [];
+    if (fmt.uhd_disc || fmt.plex_4k_file) flags.push(`<span class="flag k4">4K</span>`);
+    if (fmt.bluray) flags.push(`<span class="flag">Blu-ray</span>`);
+    if (fmt.dvd) flags.push(`<span class="flag">DVD</span>`);
+    if (fmt.vhs) flags.push(`<span class="flag vhs">VHS</span>`);
+    if (isWishlisted(movie)) flags.push(`<span class="flag wish" title="On wishlist">♥</span>`);
+    return flags.length ? `<div class="poster-flags">${flags.join("")}</div>` : "";
+  }
+
+  function runtime(movie) {
+    const ms = Number(movie.duration_ms || 0);
+    if (!ms) return null;
+    const mins = Math.round(ms / 60000);
+    const h = Math.floor(mins / 60);
+    return h ? `${h}h ${mins % 60}m` : `${mins}m`;
+  }
+
+  function sortList(list) {
+    const byTitle = (a, b) =>
+      sortTitle(a.title).localeCompare(sortTitle(b.title), undefined, { numeric: true }) ||
+      (a.year || 0) - (b.year || 0);
+    const sorted = [...list];
+    switch (state.sort) {
+      case "recent":
+        sorted.sort((a, b) => Number(b.added_at || 0) - Number(a.added_at || 0) || byTitle(a, b));
+        break;
+      case "year-desc":
+        sorted.sort((a, b) => (b.year || 0) - (a.year || 0) || byTitle(a, b));
+        break;
+      case "year-asc":
+        sorted.sort((a, b) => (a.year || 9999) - (b.year || 9999) || byTitle(a, b));
+        break;
+      default:
+        sorted.sort(byTitle);
+    }
+    return sorted;
+  }
+
+  function sortTitle(t) {
+    return String(t || "")
+      .replace(/^[^\p{L}\p{N}]+/u, "")
+      .replace(/^(the|a|an)\s+/i, "")
+      .toLowerCase();
+  }
+
+  function fmtNum(n) {
+    return Number(n).toLocaleString("en-US");
+  }
+
+  function hasActiveFilters() {
+    const f = state.filters;
+    return !!(f.q.trim() || f.genre || f.yearMin || f.yearMax || f.formats.size || f.wishlistOnly || f.collection);
+  }
+
+  function renderStats(shown) {
     const total = state.movies.length;
-    const shown = filteredMovies().length;
     const physical = state.movies.filter((m) => {
       const f = effectiveFormats(m);
       return f.uhd_disc || f.bluray || f.dvd || f.vhs;
     }).length;
-    $("#stat-total").textContent = String(total);
-    $("#stat-shown").textContent = String(shown);
-    $("#stat-physical").textContent = String(physical);
+    const vhsShelf = state.movies.filter((m) => movieCollection(m) === COLLECTION_VHS).length;
+    $("#stat-total").textContent = fmtNum(total);
+    $("#stat-physical").textContent = fmtNum(physical);
+    $("#stat-vhs").textContent = fmtNum(vhsShelf);
     $("#stat-wishlist").textContent = String(state.wishlist.items.length);
-    const imported = state.meta.imported_at || "—";
-    $("#stat-imported").textContent = imported;
-    $("#result-count").textContent = `${shown} of ${total} movies`;
+    const imported = state.meta.imported_at;
+    let importedText = "—";
+    if (imported) {
+      const d = new Date(imported);
+      importedText = Number.isNaN(d.getTime())
+        ? imported
+        : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    }
+    $("#stat-imported").textContent = importedText;
+
+    const f = state.filters;
+    let heading = "All movies";
+    if (f.collection) heading = f.collection;
+    else if (f.wishlistOnly) heading = "Wishlist";
+    else if (f.genre) heading = f.genre;
+    else if (f.q.trim()) heading = `Results for “${f.q.trim()}”`;
+    else if (f.formats.size === 1) {
+      const c = $(`.chip[data-format="${[...f.formats][0]}"]`);
+      heading = c ? c.firstChild.textContent.trim() : "Filtered";
+    } else if (hasActiveFilters()) heading = "Filtered";
+    $("#result-count").innerHTML = `${escapeHtml(heading)}<span class="of">${fmtNum(shown)} of ${fmtNum(total)}</span>`;
+    $("#active-filters").innerHTML = hasActiveFilters()
+      ? `<button type="button" class="clear-link" data-clear>Clear all filters</button>`
+      : "";
+  }
+
+  /** Facet counts: how many results each chip would give with the other filters as they are. */
+  function renderChipCounts() {
+    const f = state.filters;
+    const withFilters = (mut) => {
+      const saved = { formats: new Set(f.formats), collection: f.collection, wishlistOnly: f.wishlistOnly, genre: f.genre };
+      mut();
+      const n = state.movies.reduce((acc, m) => acc + (matchesFilters(m) ? 1 : 0), 0);
+      Object.assign(f, saved);
+      return n;
+    };
+    const setCount = (chip, n) => {
+      chip.querySelector(".chip-count").textContent = fmtNum(n);
+      chip.classList.toggle("is-empty", n === 0);
+    };
+    $$(".chip[data-format]").forEach((chip) => {
+      setCount(chip, withFilters(() => f.formats.add(chip.dataset.format)));
+    });
+    const col = $("#chip-collection");
+    setCount(col, withFilters(() => (f.collection = col.dataset.collection)));
+    setCount($("#chip-wishlist"), withFilters(() => (f.wishlistOnly = true)));
+    $$('#genre-chips .chip[data-genre]:not([data-genre=""])').forEach((chip) => {
+      const g = chip.dataset.genre;
+      setCount(chip, withFilters(() => (f.genre = g)));
+    });
   }
 
   function renderGenreOptions() {
-    const genres = new Set();
-    state.movies.forEach((m) => (m.genres || []).forEach((g) => genres.add(g)));
-    const sel = $("#filter-genre");
-    const current = sel.value;
-    sel.innerHTML =
-      `<option value="">All genres</option>` +
-      [...genres]
-        .sort((a, b) => a.localeCompare(b))
-        .map((g) => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`)
+    const counts = new Map();
+    state.movies.forEach((m) => (m.genres || []).forEach((g) => counts.set(g, (counts.get(g) || 0) + 1)));
+    const genres = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    const current = state.filters.genre;
+    $("#genre-chips").innerHTML =
+      `<button type="button" class="chip ${current ? "" : "active"}" data-genre="" aria-pressed="${!current}">All genres</button>` +
+      genres
+        .map(([g]) => {
+          const on = g === current;
+          return `<button type="button" class="chip ${on ? "active" : ""}" data-genre="${escapeHtml(g)}" aria-pressed="${on}">${escapeHtml(g)}<span class="chip-count"></span></button>`;
+        })
         .join("");
-    sel.value = current;
+  }
+
+  function emptyHtml() {
+    const f = state.filters;
+    const msg = f.q.trim()
+      ? `Nothing in the library matches “${escapeHtml(f.q.trim())}” with these filters.`
+      : "No movies match this combination of filters.";
+    return `<div class="empty">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/></svg></div>
+      <h3>No titles here</h3>
+      <p>${msg}</p>
+      <button type="button" class="btn" data-clear>Clear filters</button>
+    </div>`;
   }
 
   function renderCards(list) {
     const root = $("#movie-grid");
     if (!list.length) {
-      root.innerHTML = `<div class="empty">No movies match these filters.</div>`;
+      root.innerHTML = emptyHtml();
       return;
     }
+    const animate = state.firstRender;
     root.innerHTML = list
-      .map((m) => {
+      .map((m, i) => {
         const key = movieKey(m);
-        return `<article class="card" data-key="${escapeHtml(key)}" tabindex="0" role="button">
-          <div class="year">${m.year || "—"}</div>
-          <h3>${escapeHtml(m.title)}</h3>
-          <div class="badges">${formatBadges(m)}</div>
-          <p class="summary">${escapeHtml(m.summary || "No synopsis.")}</p>
+        const genre = (m.genres || [])[0];
+        const sub = [m.year || null, genre || null].filter(Boolean).join(" · ") || "—";
+        const delay = animate && i < 40 ? ` style="animation-delay:${i * 18}ms"` : animate ? "" : ` style="animation:none"`;
+        return `<article class="poster-card" data-key="${escapeHtml(key)}" tabindex="0" role="button" aria-label="${escapeHtml(`${m.title}${m.year ? ` (${m.year})` : ""}`)}"${delay}>
+          <div class="poster-frame">
+            ${artHtml(m, "w342")}
+            ${posterFlags(m)}
+            <div class="poster-hover">
+              <div class="pill-row">${formatPills(m)}</div>
+              ${m.summary ? `<p>${escapeHtml(m.summary)}</p>` : ""}
+            </div>
+          </div>
+          <div class="poster-meta">
+            <h3 class="poster-title">${escapeHtml(m.title)}</h3>
+            <p class="poster-sub">${escapeHtml(String(sub))}</p>
+          </div>
         </article>`;
       })
       .join("");
+    state.firstRender = false;
   }
 
   function renderTable(list) {
     const body = $("#movie-table-body");
     if (!list.length) {
-      body.innerHTML = `<tr><td colspan="6" class="empty">No movies match these filters.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="6">${emptyHtml()}</td></tr>`;
       return;
     }
     body.innerHTML = list
       .map((m) => {
         const key = movieKey(m);
         const genres = (m.genres || []).join(", ");
-        return `<tr data-key="${escapeHtml(key)}">
-          <td class="title">${escapeHtml(m.title)}</td>
+        return `<tr data-key="${escapeHtml(key)}" tabindex="0">
+          <td class="title"><div class="row-title"><span class="thumb">${artHtml(m, "w92")}</span>${escapeHtml(m.title)}</div></td>
           <td>${m.year || "—"}</td>
           <td>${escapeHtml(genres || "—")}</td>
           <td>${escapeHtml(m.studio || "—")}</td>
-          <td>${escapeHtml((m.resolutions || []).join(", ") || "—")}</td>
-          <td><div class="badges">${formatBadges(m)}</div></td>
+          <td>${escapeHtml((m.resolutions || []).map((r) => String(r).toUpperCase()).join(", ") || "—")}</td>
+          <td><div class="pill-row">${formatBadges(m)}</div></td>
         </tr>`;
       })
       .join("");
   }
 
   function renderList() {
-    const list = filteredMovies();
-    renderStats();
+    const list = sortList(filteredMovies());
+    renderStats(list.length);
+    renderChipCounts();
     if (state.view === "cards") {
       $("#movie-grid").classList.remove("hidden");
       $("#movie-table-wrap").classList.add("hidden");
@@ -281,11 +449,28 @@
     }
   }
 
+  function renderHero() {
+    const pick = state.movies
+      .filter((m) => posterUrl(m))
+      .sort((a, b) => Number(b.added_at || 0) - Number(a.added_at || 0))
+      .slice(0, 24);
+    if (!pick.length) return;
+    $("#hero-art").innerHTML = `<div class="hero-strip">${pick
+      .map((m) => `<img src="${posterUrl(m, "w185")}" alt="" loading="lazy" decoding="async" />`)
+      .join("")}</div>`;
+  }
+
+  function renderSkeleton() {
+    $("#movie-grid").innerHTML = Array.from({ length: 18 })
+      .map(() => `<div class="poster-card skeleton" aria-hidden="true"><div class="poster-frame"></div><div class="poster-meta"><span></span><span></span></div></div>`)
+      .join("");
+  }
+
   function renderWishlist() {
     const ul = $("#wishlist-items");
     const items = state.wishlist.items || [];
     if (!items.length) {
-      ul.innerHTML = `<li class="meta">Wishlist is empty. Add titles you want to own.</li>`;
+      ul.innerHTML = `<li class="empty-wish">Nothing on the wishlist yet.<br />Add a title above, or from any movie’s detail view.</li>`;
       return;
     }
     ul.innerHTML = items
@@ -300,27 +485,65 @@
       .join("");
   }
 
+  let lastFocus = null;
+
+  function openLayer(id) {
+    lastFocus = document.activeElement;
+    $(id).classList.remove("hidden");
+    document.body.classList.add("modal-open");
+    const panel = $(`${id} [tabindex="-1"]`);
+    if (panel) panel.focus({ preventScroll: true });
+  }
+
+  function closeLayer(id) {
+    $(id).classList.add("hidden");
+    if ($$(".modal-backdrop:not(.hidden), .drawer-backdrop:not(.hidden)").length === 0) {
+      document.body.classList.remove("modal-open");
+    }
+    if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+  }
+
   function openModal(movie) {
+    const wasOpen = !$("#modal-backdrop").classList.contains("hidden");
     state.selectedKey = movieKey(movie);
     const fmt = effectiveFormats(movie);
+    const collection = movieCollection(movie);
     $("#modal-title").textContent = movie.title;
-    $("#modal-sub").textContent = [
-      movie.year || null,
-      movie.studio || null,
-      (movie.genres || []).join(" · ") || null,
+
+    const sub = [
+      movie.year ? escapeHtml(movie.year) : null,
+      movie.content_rating ? `<span class="rating">${escapeHtml(movie.content_rating)}</span>` : null,
+      runtime(movie),
+      movie.studio ? escapeHtml(movie.studio) : null,
       movie.animation === "live" ? "Live action" : movie.animation === "animated" ? "Animated" : null,
-      movie.content_rating || null,
-      movieCollection(movie) || null,
-      movie.source === "manual" ? "Manual add" : null,
-    ]
-      .filter(Boolean)
-      .join(" · ");
-    $("#modal-summary").textContent = movie.summary || "No synopsis available.";
-    $("#modal-res").textContent = (movie.resolutions || []).length
-      ? `Plex file resolution: ${(movie.resolutions || []).join(", ").toUpperCase()}`
-      : movie.source === "manual"
-        ? "Not on Plex yet (manual entry)."
-        : "Plex file resolution: unknown";
+    ].filter(Boolean);
+    $("#modal-sub").innerHTML = sub
+      .map((x) => (String(x).startsWith("<span") ? x : `<span>${x}</span>`))
+      .join("");
+
+    const colEl = $("#modal-collection");
+    colEl.hidden = !collection;
+    colEl.textContent = collection || "";
+
+    $("#modal-genres").innerHTML = (movie.genres || [])
+      .map((g) => `<button type="button" class="pill" data-genre-jump="${escapeHtml(g)}">${escapeHtml(g)}</button>`)
+      .join("");
+
+    $("#modal-summary").textContent = movie.summary || "No synopsis yet.";
+
+    const res = (movie.resolutions || []).map((r) => String(r).toUpperCase());
+    $("#modal-res").innerHTML = fmt.plex
+      ? `<span class="pill plex">On Plex</span>${res.map((r) => `<span class="pill">${escapeHtml(r)}</span>`).join("")}${isManual(movie) ? `<span class="pill manual">Manual add</span>` : ""}`
+      : isManual(movie)
+        ? `<span class="pill manual">Manual add</span> Not on Plex yet`
+        : "Not on Plex";
+
+    const art = $("#modal-art");
+    const bd = backdropUrl(movie);
+    art.className = "detail-hero" + (bd ? "" : " ph-hero");
+    art.style.backgroundImage = bd ? `url("${bd}")` : "";
+    art.style.setProperty("--h", titleHue(movie.title));
+    $("#modal-poster").innerHTML = artHtml(movie, "w500", `${movie.title} poster`);
 
     const box = $("#format-toggles");
     box.innerHTML = PHYSICAL_KEYS.map((k) => {
@@ -335,24 +558,37 @@
     wishBtn.textContent = isWishlisted(movie) ? "Remove from wishlist" : "Add to wishlist";
     wishBtn.dataset.mode = isWishlisted(movie) ? "remove" : "add";
 
-    $("#modal-backdrop").classList.remove("hidden");
+    if (!wasOpen) openLayer("#modal-backdrop");
+    $("#modal-backdrop .modal").scrollTop = wasOpen ? $("#modal-backdrop .modal").scrollTop : 0;
   }
 
   function closeModal() {
+    if ($("#modal-backdrop").classList.contains("hidden")) return;
     state.selectedKey = null;
-    $("#modal-backdrop").classList.add("hidden");
+    closeLayer("#modal-backdrop");
   }
 
   function openAddMovieModal() {
     const form = $("#add-movie-form");
     form.reset();
     $$("#add-format-toggles .toggle").forEach((t) => t.classList.remove("on"));
-    $("#add-movie-backdrop").classList.remove("hidden");
+    openLayer("#add-movie-backdrop");
     $("#add-title").focus();
   }
 
   function closeAddMovieModal() {
-    $("#add-movie-backdrop").classList.add("hidden");
+    if ($("#add-movie-backdrop").classList.contains("hidden")) return;
+    closeLayer("#add-movie-backdrop");
+  }
+
+  function openWishlist() {
+    $("#sync-menu").open = false;
+    openLayer("#wishlist-backdrop");
+  }
+
+  function closeWishlist() {
+    if ($("#wishlist-backdrop").classList.contains("hidden")) return;
+    closeLayer("#wishlist-backdrop");
   }
 
   function selectedMovie() {
@@ -368,7 +604,7 @@
     state.wishlist.updated_at = new Date().toISOString();
     saveLS(LS_WISHLIST, state.wishlist);
     renderWishlist();
-    renderStats();
+    $("#stat-wishlist").textContent = String(state.wishlist.items.length);
   }
 
   function persistManualMovies() {
@@ -606,17 +842,23 @@
   }
 
   async function loadData() {
-    const [moviesRes, formatsRes, wishRes, manualRes] = await Promise.all([
+    const [moviesRes, formatsRes, wishRes, manualRes, postersRes] = await Promise.all([
       fetch("data/movies.json"),
       fetch("data/formats-overlay.json"),
       fetch("data/wishlist.json"),
       fetch("data/manual-movies.json"),
+      fetch("data/posters.json").catch(() => null),
     ]);
     if (!moviesRes.ok) throw new Error("Failed to load data/movies.json");
     const moviesData = await moviesRes.json();
     const formatsData = formatsRes.ok ? await formatsRes.json() : { formats: {} };
     const wishData = wishRes.ok ? await wishRes.json() : { items: [] };
     const manualData = manualRes.ok ? await manualRes.json() : { movies: [] };
+    try {
+      state.posters = postersRes && postersRes.ok ? (await postersRes.json()).posters || {} : {};
+    } catch {
+      state.posters = {};
+    }
 
     state.meta = {
       source: moviesData.source,
@@ -627,13 +869,40 @@
     rebuildMovieList(moviesData.movies || []);
   }
 
+  function clearFilters() {
+    state.filters = { q: "", genre: "", yearMin: "", yearMax: "", formats: new Set(), wishlistOnly: false, collection: "" };
+    $("#filter-q").value = "";
+    $("#filter-year-min").value = "";
+    $("#filter-year-max").value = "";
+    syncChipStates();
+    renderList();
+  }
+
+  function syncChipStates() {
+    const f = state.filters;
+    const set = (chip, on) => {
+      chip.classList.toggle("active", on);
+      chip.setAttribute("aria-pressed", String(on));
+    };
+    $$(".chip[data-format]").forEach((c) => set(c, f.formats.has(c.dataset.format)));
+    set($("#chip-collection"), f.collection === $("#chip-collection").dataset.collection);
+    set($("#chip-wishlist"), f.wishlistOnly);
+    $$("#genre-chips .chip[data-genre]").forEach((c) => set(c, c.dataset.genre === f.genre));
+  }
+
   function bind() {
+    let qTimer;
     $("#filter-q").addEventListener("input", (e) => {
       state.filters.q = e.target.value;
-      renderList();
+      clearTimeout(qTimer);
+      qTimer = setTimeout(renderList, 110);
     });
-    $("#filter-genre").addEventListener("change", (e) => {
-      state.filters.genre = e.target.value;
+    $("#genre-chips").addEventListener("click", (e) => {
+      const chip = e.target.closest("[data-genre]");
+      if (!chip) return;
+      const g = chip.dataset.genre;
+      state.filters.genre = state.filters.genre === g ? "" : g;
+      syncChipStates();
       renderList();
     });
     $("#filter-year-min").addEventListener("input", (e) => {
@@ -644,55 +913,97 @@
       state.filters.yearMax = e.target.value;
       renderList();
     });
+    $("#sort-by").addEventListener("change", (e) => {
+      state.sort = e.target.value;
+      renderList();
+    });
 
     $$(".chip[data-format]").forEach((chip) => {
       chip.addEventListener("click", () => {
         const f = chip.dataset.format;
-        if (state.filters.formats.has(f)) {
-          state.filters.formats.delete(f);
-          chip.classList.remove("active");
-        } else {
-          state.filters.formats.add(f);
-          chip.classList.add("active");
-        }
+        if (state.filters.formats.has(f)) state.filters.formats.delete(f);
+        else state.filters.formats.add(f);
+        syncChipStates();
         renderList();
       });
     });
 
     $("#chip-wishlist").addEventListener("click", () => {
       state.filters.wishlistOnly = !state.filters.wishlistOnly;
-      $("#chip-wishlist").classList.toggle("active", state.filters.wishlistOnly);
+      syncChipStates();
       renderList();
     });
 
     const collectionChip = $("#chip-collection");
-    if (collectionChip) {
-      collectionChip.addEventListener("click", () => {
-        const value = collectionChip.dataset.collection;
-        const on = state.filters.collection !== value;
-        state.filters.collection = on ? value : "";
-        collectionChip.classList.toggle("active", on);
-        renderList();
-      });
-    }
-
-    $("#btn-clear").addEventListener("click", () => {
-      state.filters = { q: "", genre: "", yearMin: "", yearMax: "", formats: new Set(), wishlistOnly: false, collection: "" };
-      $("#filter-q").value = "";
-      $("#filter-genre").value = "";
-      $("#filter-year-min").value = "";
-      $("#filter-year-max").value = "";
-      $$(".chip").forEach((c) => c.classList.remove("active"));
+    collectionChip.addEventListener("click", () => {
+      const value = collectionChip.dataset.collection;
+      state.filters.collection = state.filters.collection !== value ? value : "";
+      syncChipStates();
       renderList();
     });
 
-    $$(".view-toggle .btn").forEach((btn) => {
+    document.addEventListener("click", (e) => {
+      if (e.target.closest("[data-clear]")) clearFilters();
+      const menu = $("#sync-menu");
+      if (menu.open && !e.target.closest("#sync-menu")) menu.open = false;
+    });
+
+    $$(".view-toggle .seg").forEach((btn) => {
       btn.addEventListener("click", () => {
         state.view = btn.dataset.view;
-        $$(".view-toggle .btn").forEach((b) => b.classList.toggle("active", b === btn));
+        $$(".view-toggle .seg").forEach((b) => {
+          b.classList.toggle("active", b === btn);
+          b.setAttribute("aria-pressed", String(b === btn));
+        });
         renderList();
       });
     });
+
+    // Fade posters in once loaded (load events don't bubble; use capture).
+    const markLoaded = (e) => {
+      if (e.target.tagName === "IMG") e.target.classList.add("loaded");
+    };
+    document.addEventListener("load", markLoaded, true);
+    document.addEventListener("error", (e) => {
+      const img = e.target;
+      if (img.tagName !== "IMG" || !img.closest(".poster-frame, .detail-poster, .thumb")) return;
+      const card = img.closest("[data-key]");
+      const key = card ? card.dataset.key : state.selectedKey;
+      const m = state.movies.find((x) => movieKey(x) === key);
+      if (m) img.outerHTML = placeholderHtml(m);
+    }, true);
+
+    $("#modal-genres").addEventListener("click", (e) => {
+      const g = e.target.closest("[data-genre-jump]");
+      if (!g) return;
+      state.filters.genre = g.dataset.genreJump;
+      closeModal();
+      syncChipStates();
+      renderList();
+      const chip = $(`#genre-chips .chip[data-genre="${CSS.escape(state.filters.genre)}"]`);
+      if (chip) chip.scrollIntoView({ inline: "center", block: "nearest" });
+      window.scrollTo({ top: $("#main").offsetTop - $("#filterbar").offsetHeight - $("#topbar").offsetHeight, behavior: "smooth" });
+    });
+
+    $("#btn-open-wishlist").addEventListener("click", openWishlist);
+    $("#wishlist-close").addEventListener("click", closeWishlist);
+    $("#wishlist-backdrop").addEventListener("click", (e) => {
+      if (e.target === $("#wishlist-backdrop")) closeWishlist();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "/" && !e.target.closest("input, textarea, select") && $$(".modal-backdrop:not(.hidden), .drawer-backdrop:not(.hidden)").length === 0) {
+        e.preventDefault();
+        $("#filter-q").focus();
+      }
+    });
+
+    const filterbar = $("#filterbar");
+    const onScroll = () => filterbar.classList.toggle("stuck", filterbar.getBoundingClientRect().top <= $("#topbar").offsetHeight + 1);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const syncTopbar = () => document.documentElement.style.setProperty("--topbar-h", `${$("#topbar").offsetHeight}px`);
+    window.addEventListener("resize", syncTopbar);
+    syncTopbar();
 
     $("#movie-grid").addEventListener("click", (e) => {
       const card = e.target.closest("[data-key]");
@@ -708,6 +1019,12 @@
       const m = state.movies.find((x) => movieKey(x) === card.dataset.key);
       if (m) openModal(m);
     });
+    $("#movie-table-body").addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      const row = e.target.closest("[data-key]");
+      const m = row && state.movies.find((x) => movieKey(x) === row.dataset.key);
+      if (m) openModal(m);
+    });
     $("#movie-table-body").addEventListener("click", (e) => {
       const row = e.target.closest("[data-key]");
       if (!row) return;
@@ -721,8 +1038,16 @@
     });
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
+      if ($("#sync-menu").open) {
+        $("#sync-menu").open = false;
+        return;
+      }
       if (!$("#add-movie-backdrop").classList.contains("hidden")) {
         closeAddMovieModal();
+        return;
+      }
+      if (!$("#wishlist-backdrop").classList.contains("hidden")) {
+        closeWishlist();
         return;
       }
       closeModal();
@@ -770,6 +1095,7 @@
         formats: state.formatsOverlay.formats || {},
       };
       downloadJson("formats-overlay.json", payload);
+      $("#sync-menu").open = false;
       toast("Downloaded formats-overlay.json — replace data/formats-overlay.json and commit.");
     });
 
@@ -779,6 +1105,7 @@
         items: state.wishlist.items || [],
       };
       downloadJson("wishlist.json", payload);
+      $("#sync-menu").open = false;
       toast("Downloaded wishlist.json — replace data/wishlist.json and commit.");
     });
 
@@ -789,6 +1116,7 @@
         movies: state.manualMovies.movies || [],
       };
       downloadJson("manual-movies.json", payload);
+      $("#sync-menu").open = false;
       toast("Downloaded manual-movies.json — replace data/manual-movies.json and commit.");
     });
 
@@ -840,15 +1168,17 @@
 
   async function init() {
     bind();
+    renderSkeleton();
     try {
       await loadData();
       renderGenreOptions();
       renderWishlist();
+      renderHero();
       renderList();
       $("#source-name").textContent = state.meta.source || "Plex";
     } catch (err) {
       console.error(err);
-      $("#movie-grid").innerHTML = `<div class="empty">Failed to load movie data. Check data/movies.json.</div>`;
+      $("#movie-grid").innerHTML = `<div class="empty"><h3>Couldn’t load the library</h3><p>Check that <code>data/movies.json</code> is reachable, then refresh.</p></div>`;
       toast(String(err.message || err));
     }
   }
