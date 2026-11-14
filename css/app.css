@@ -358,6 +358,11 @@ textarea:focus {
   border-color: rgba(200, 120, 255, 0.4);
 }
 
+.badge.collection {
+  color: #f3c48b;
+  border-color: rgba(232, 164, 80, 0.45);
+}
+
 .table-wrap {
   overflow: auto;
   border: 1px solid var(--border);

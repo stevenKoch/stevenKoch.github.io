@@ -27,6 +27,7 @@
       yearMax: "",
       formats: new Set(),
       wishlistOnly: false,
+      collection: "",
     },
     view: "cards",
     selectedKey: null,
@@ -117,6 +118,11 @@
     };
   }
 
+  function movieCollection(movie) {
+    const over = state.formatsOverlay.formats[movieKey(movie)] || {};
+    return over.collection || movie.collection || null;
+  }
+
   function isWishlisted(movie) {
     const title = (movie.title || "").toLowerCase();
     const year = movie.year;
@@ -131,13 +137,14 @@
     const f = state.filters;
     const q = f.q.trim().toLowerCase();
     if (q) {
-      const hay = `${movie.title} ${movie.studio || ""} ${(movie.genres || []).join(" ")}`.toLowerCase();
+      const hay = `${movie.title} ${movie.studio || ""} ${(movie.genres || []).join(" ")} ${movieCollection(movie) || ""}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     if (f.genre && !(movie.genres || []).includes(f.genre)) return false;
     if (f.yearMin && (movie.year == null || movie.year < Number(f.yearMin))) return false;
     if (f.yearMax && (movie.year == null || movie.year > Number(f.yearMax))) return false;
     if (f.wishlistOnly && !isWishlisted(movie)) return false;
+    if (f.collection && movieCollection(movie) !== f.collection) return false;
 
     if (f.formats.size) {
       const fmt = effectiveFormats(movie);
@@ -175,6 +182,8 @@
     if (fmt.digital) bits.push(`<span class="badge disc">Digital</span>`);
     if (movie.animation === "live") bits.push(`<span class="badge anim">Live</span>`);
     if (movie.animation === "animated") bits.push(`<span class="badge anim">Animated</span>`);
+    const collection = movieCollection(movie);
+    if (collection) bits.push(`<span class="badge collection">${escapeHtml(collection)}</span>`);
     if (isWishlisted(movie)) bits.push(`<span class="badge wish">Wishlist</span>`);
     return bits.join("");
   }
@@ -301,6 +310,7 @@
       (movie.genres || []).join(" · ") || null,
       movie.animation === "live" ? "Live action" : movie.animation === "animated" ? "Animated" : null,
       movie.content_rating || null,
+      movieCollection(movie) || null,
       movie.source === "manual" ? "Manual add" : null,
     ]
       .filter(Boolean)
@@ -655,8 +665,19 @@
       renderList();
     });
 
+    const collectionChip = $("#chip-collection");
+    if (collectionChip) {
+      collectionChip.addEventListener("click", () => {
+        const value = collectionChip.dataset.collection;
+        const on = state.filters.collection !== value;
+        state.filters.collection = on ? value : "";
+        collectionChip.classList.toggle("active", on);
+        renderList();
+      });
+    }
+
     $("#btn-clear").addEventListener("click", () => {
-      state.filters = { q: "", genre: "", yearMin: "", yearMax: "", formats: new Set(), wishlistOnly: false };
+      state.filters = { q: "", genre: "", yearMin: "", yearMax: "", formats: new Set(), wishlistOnly: false, collection: "" };
       $("#filter-q").value = "";
       $("#filter-genre").value = "";
       $("#filter-year-min").value = "";
@@ -745,7 +766,7 @@
     $("#btn-download-formats").addEventListener("click", () => {
       const payload = {
         updated_at: new Date().toISOString(),
-        note: "Physical ownership overlays keyed by plex_rating_key (or manual id). uhd_disc = owned 4K UHD disc (separate from Plex file resolution).",
+        note: "Physical ownership overlays keyed by plex_rating_key (or manual id). uhd_disc = owned 4K UHD disc (separate from Plex file resolution). Optional collection (e.g. Daughter's VHS) marks who owns the physical copy.",
         formats: state.formatsOverlay.formats || {},
       };
       downloadJson("formats-overlay.json", payload);

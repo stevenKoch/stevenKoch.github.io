@@ -1,5 +1,746 @@
 {
-  "updated_at": null,
-  "note": "Manually added movies not (yet) in Plex. Merged with movies.json on load. Ids are manual-<slug>-<year>; localStorage wins for the same id.",
-  "movies": []
+  "updated_at": "2026-11-13T20:33:59-06:00",
+  "note": "Manually added movies not (yet) in Plex. Merged with movies.json on load. Ids are manual-<slug>-<year>; localStorage wins for the same id. collection marks a household shelf (e.g. Daughter's VHS).",
+  "movies": [
+    {
+      "id": "manual-pinocchio-1940",
+      "title": "Pinocchio",
+      "year": 1940,
+      "studio": "Walt Disney Productions",
+      "genres": [
+        "Animation",
+        "Family",
+        "Fantasy"
+      ],
+      "animation": "animated",
+      "summary": "When the gentle woodcarver Geppetto builds a marionette to be his substitute son, a benevolent fairy brings the toy to life. The puppet, named Pinocchio, is not yet a human boy. He must earn the right to be real by proving that he is brave, truthful, and unselfish.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-dumbo-1941",
+      "title": "Dumbo",
+      "year": 1941,
+      "studio": "Walt Disney Productions",
+      "genres": [
+        "Animation",
+        "Family"
+      ],
+      "animation": "animated",
+      "summary": "Dumbo is a baby elephant born with over-sized ears and a supreme lack of confidence. But thanks to his even more diminutive buddy Timothy the Mouse,  the pint-sized pachyderm learns to surmount all obstacles.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-three-caballeros-1944",
+      "title": "The Three Caballeros",
+      "year": 1944,
+      "studio": "Walt Disney Productions",
+      "genres": [
+        "Animation",
+        "Family",
+        "Music"
+      ],
+      "animation": "animated",
+      "summary": "For Donald's birthday he receives a box with three gifts inside. The gifts, a movie projector, a pop-up book, and a pinata, each take Donald on wild adventures through Mexico and South America.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-lady-and-the-tramp-ii-scamp-s-adventure-2001",
+      "title": "Lady and the Tramp II: Scamp's Adventure",
+      "year": 2001,
+      "studio": "Disney Television Animation",
+      "genres": [
+        "Animation",
+        "Family",
+        "Romance",
+        "Adventure"
+      ],
+      "animation": "animated",
+      "summary": "Lady and Tramp's mischievous pup, Scamp, gets fed up with rules and restrictions imposed on him by life in a family, and longs for a wild and free lifestyle. He runs away from home and into the streets where he joins a pack of stray dogs known as the \"Junkyard Dogs.\" Buster, the pack's leader, takes an instant disliking to the \"house-dog\" and considers him a rival. Angel, a junkyard pup Scamp's age, longs for the safety and comfort of life in a family and the two become instant companions. Will Scamp choose the wild and free life of a stray or the unconditional love of his family?",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-one-hundred-and-one-dalmatians-1961",
+      "title": "One Hundred and One Dalmatians",
+      "year": 1961,
+      "studio": "Walt Disney Productions",
+      "genres": [
+        "Adventure",
+        "Animation",
+        "Comedy",
+        "Family"
+      ],
+      "animation": "animated",
+      "summary": "When a litter of dalmatian puppies are abducted by the minions of Cruella De Vil, the parents must find them before she uses them for a diabolical fashion statement.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-sword-in-the-stone-1963",
+      "title": "The Sword in the Stone",
+      "year": 1963,
+      "studio": "Walt Disney Productions",
+      "genres": [
+        "Animation",
+        "Family",
+        "Fantasy"
+      ],
+      "animation": "animated",
+      "summary": "Wart is a young boy who aspires to be a knight's squire. On a hunting trip he falls in on Merlin, a powerful but amnesiac wizard who has plans for him beyond mere squiredom. He starts by trying to give him an education, believing that once one has an education, one can go anywhere. Needless to say, it doesn't quite work out that way.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-robin-hood-1973",
+      "title": "Robin Hood",
+      "year": 1973,
+      "studio": "Walt Disney Productions",
+      "genres": [
+        "Animation",
+        "Family",
+        "Adventure"
+      ],
+      "animation": "animated",
+      "summary": "With King Richard off to the Crusades, Prince John and his slithering minion, Sir Hiss, set about taxing Nottingham's citizens with support from the corrupt sheriff - and staunch opposition by the wily Robin Hood and his band of merry men.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-many-adventures-of-winnie-the-pooh-1977",
+      "title": "The Many Adventures of Winnie the Pooh",
+      "year": 1977,
+      "studio": "Walt Disney Productions",
+      "genres": [
+        "Animation",
+        "Family",
+        "Adventure"
+      ],
+      "animation": "animated",
+      "summary": "Whether we’re young or forever young at heart, the Hundred Acre Wood calls to that place in each of us that still believes in magic. Join pals Pooh, Piglet, Kanga, Roo, Owl, Rabbit, Tigger and Christopher Robin as they enjoy their days together and sing their way through adventures.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-pooh-s-grand-adventure-the-search-for-christopher-robin-1997",
+      "title": "Pooh's Grand Adventure: The Search for Christopher Robin",
+      "year": 1997,
+      "studio": "Disney Television Animation",
+      "genres": [
+        "Animation",
+        "Family",
+        "Adventure"
+      ],
+      "animation": "animated",
+      "summary": "Pooh gets confused when Christopher Robin leaves him a note to say that he has gone back to school after the holidays. So Pooh, Piglet, Tigger, Eeyore and Rabbit go in search of Christopher Robin which leads to a big adventure.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-rescuers-1977",
+      "title": "The Rescuers",
+      "year": 1977,
+      "studio": "Walt Disney Productions",
+      "genres": [
+        "Fantasy",
+        "Family",
+        "Animation",
+        "Adventure"
+      ],
+      "animation": "animated",
+      "summary": "Two agents of the mouse-run International Rescue Aid Society search for a little orphan girl kidnapped by sinister treasure hunters.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-rescuers-down-under-1990",
+      "title": "The Rescuers Down Under",
+      "year": 1990,
+      "studio": "Walt Disney Feature Animation",
+      "genres": [
+        "Animation",
+        "Family",
+        "Adventure",
+        "Action",
+        "Comedy"
+      ],
+      "animation": "animated",
+      "summary": "A lawless poacher wants to capture a majestic and rare golden eagle, so he kidnaps the boy who knows where to find the bird. Not to worry -- the Rescue Aid Society's top agents, heroic mice Miss Bianca and Bernard, fly to Australia to save the day. Accompanying the fearless duo are bumbling albatross Wilbur and local field operative Jake the Kangaroo Rat.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-fox-and-the-hound-1981",
+      "title": "The Fox and the Hound",
+      "year": 1981,
+      "studio": "Walt Disney Productions",
+      "genres": [
+        "Adventure",
+        "Animation",
+        "Drama",
+        "Family"
+      ],
+      "animation": "animated",
+      "summary": "When a feisty little fox named Tod is adopted into a farm family, he quickly becomes friends with a fun and adorable hound puppy named Copper. Life is full of hilarious adventures until Copper is expected to take on his role as a hunting dog -- and the object of his search is his best friend!",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-black-cauldron-1985",
+      "title": "The Black Cauldron",
+      "year": 1985,
+      "studio": "Walt Disney Pictures",
+      "genres": [
+        "Animation",
+        "Adventure",
+        "Family",
+        "Fantasy"
+      ],
+      "animation": "animated",
+      "summary": "Taran is an assistant pigkeeper with boyish dreams of becoming a great warrior. However, he has to put the daydreaming aside when his charge, an oracular pig named Hen Wen, is kidnapped by an evil lord known as the Horned King. The villain hopes Hen will show him the way to The Black Cauldron, which has the power to create a giant army of unstoppable soldiers.",
+      "content_rating": "PG",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-little-mermaid-ii-return-to-the-sea-2000",
+      "title": "The Little Mermaid II: Return to the Sea",
+      "year": 2000,
+      "studio": "Disney Television Animation",
+      "genres": [
+        "Animation",
+        "Adventure",
+        "Family",
+        "Comedy"
+      ],
+      "animation": "animated",
+      "summary": "Set several years after the first film, Ariel and Prince Eric are happily married with a daughter, Melody. In order to protect Melody from the Sea Witch, Morgana, they have not told her about her mermaid heritage. Melody is curious and ventures into the sea, where she meets new friends. But will she become a pawn in Morgana's quest to take control of the ocean from King Triton?",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-hunchback-of-notre-dame-ii-2002",
+      "title": "The Hunchback of Notre Dame II",
+      "year": 2002,
+      "studio": "Disney Television Animation",
+      "genres": [
+        "Animation",
+        "Family",
+        "Comedy",
+        "Romance"
+      ],
+      "animation": "animated",
+      "summary": "Now that Frollo is gone, Quasimodo rings the bell with the help of his new friend and Esmeralda and Phoebus' little son, Zephyr. But when Quasi stops by a traveling circus owned by evil magician Sarousch, he falls for Madellaine, Sarouch's assistant.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-bernadette-the-princess-of-lourdes-1990",
+      "title": "Bernadette: The Princess of Lourdes",
+      "year": 1990,
+      "studio": "CCC of America",
+      "genres": [
+        "Family",
+        "Animation",
+        "Music"
+      ],
+      "animation": "animated",
+      "summary": "It’s February 11, 1858. Three girls from Lourdes, France, gather firewood in front of a grotto. Suddenly one of them, Bernadette Soubirous, 14, drops to her knees, gazes ecstatically at something beautiful only she can see, and starts to pray. Soon the town buzzes: Has Bernadette, poor, sickly, and always behind in school, really seen a Lady from Heaven? Then a spring bubbles up from nowhere and withered arms and sightless eyes are cured.  At last, the Lady tells Bernadette her name: “I am The Immaculate Concepcion.”  BERNADETTE, THE PRINCESS OF LOURDES, is the exciting true story of a visit by the Queen of Heaven that left the entire world a source of health for body and soul.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-iron-giant-1999",
+      "title": "The Iron Giant",
+      "year": 1999,
+      "studio": "Warner Bros. Feature Animation",
+      "genres": [
+        "Animation",
+        "Drama",
+        "Family",
+        "Science Fiction",
+        "Adventure"
+      ],
+      "animation": "animated",
+      "summary": "In the small town of Rockwell, Maine in October 1957, a giant metal machine befriends a nine-year-old boy and ultimately finds its humanity by unselfishly saving people from their own fears and prejudices.",
+      "content_rating": "PG",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-muppet-movie-1979",
+      "title": "The Muppet Movie",
+      "year": 1979,
+      "studio": "Henson Associates",
+      "genres": [
+        "Family",
+        "Comedy",
+        "Adventure"
+      ],
+      "animation": "live",
+      "summary": "The Muppets gather to watch their newly-finished big-budget rich-and-famous feature film: a talent agent persuades Kermit the Frog to leave the swamp to pursue a career in Hollywood. On his way there, he meets a bear, a pig, a whatever (his future Muppet crew), and some special celebrity guest stars, while being chased by the desperate owner of a frog-leg restaurant!",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-muppet-classic-theater-1994",
+      "title": "Muppet Classic Theater",
+      "year": 1994,
+      "studio": "Jim Henson Productions",
+      "genres": [
+        "Music",
+        "Comedy",
+        "Family"
+      ],
+      "animation": "live",
+      "summary": "Gonzo and Rizzo host a presentation in the Muppet Theater of six fairy tales performed by the Muppets. Kermit the Frog, Miss Piggy, Fozzie Bear, Robin the Frog, Gonzo and Rizzo star in the various stories. The production also marked the first appearance of Andy and Randy Pig and the Elvises, who later appeared on Muppets Tonight. Written by Jim Lewis and Bill Prady, each story also features an original song.",
+      "content_rating": null,
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-schoolhouse-rock-the-best-of-2002",
+      "title": "Schoolhouse Rock! The Best of",
+      "year": 2002,
+      "studio": "ABC",
+      "genres": [
+        "Animation",
+        "Family",
+        "Music"
+      ],
+      "animation": "animated",
+      "summary": "Schoolhouse Rock, the timeless collection of animated songs that taught an entire generation that “Knowledge Is Power,” is back in this special 30th Anniversary Edition. The Best of Schoolhouse Rock features the Top 25 songs as voted by Schoolhouse Rock fans everywhere in an online poll.",
+      "content_rating": null,
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-small-soldiers-1998",
+      "title": "Small Soldiers",
+      "year": 1998,
+      "studio": "DreamWorks Pictures",
+      "genres": [
+        "Comedy",
+        "Adventure",
+        "Fantasy",
+        "Science Fiction",
+        "Action"
+      ],
+      "animation": "live",
+      "summary": "When missile technology is used to enhance toy action figures, the toys soon begin to take their battle programming too seriously.",
+      "content_rating": "PG-13",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-thumbelina-1994",
+      "title": "Thumbelina",
+      "year": 1994,
+      "studio": "Don Bluth Entertainment",
+      "genres": [
+        "Animation",
+        "Fantasy",
+        "Romance",
+        "Family"
+      ],
+      "animation": "animated",
+      "summary": "Born of a flower and growing to only a couple of inches tall, poor Thumbelina is worried she'll never meet someone her own size, until she happens to catch the eye of Prince Cornelius of the Fairies. Just as soon as she finds love, however, it's torn away when she's kidnapped by Ms. Toad. Now Thumbelina has to escape Ms. Toad's grasp and search for Prince Cornelius. Luckily, there's a whole city of animals willing to help.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-chitty-chitty-bang-bang-1968",
+      "title": "Chitty Chitty Bang Bang",
+      "year": 1968,
+      "studio": "United Artists",
+      "genres": [
+        "Family",
+        "Adventure",
+        "Fantasy",
+        "Comedy"
+      ],
+      "animation": "live",
+      "summary": "A hapless inventor finally finds success with a flying car, which a dictator from a foreign government sets out to take for himself.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-joseph-and-the-amazing-technicolor-dreamcoat-1999",
+      "title": "Joseph and the Amazing Technicolor Dreamcoat",
+      "year": 1999,
+      "studio": "The Really Useful Group",
+      "genres": [
+        "Family"
+      ],
+      "animation": "live",
+      "summary": "Joseph, the favored son of Jacob, is betrayed by his jealous brothers, sold into slavery, and driven to Egypt. Though beset with adversity, Joseph perseveres through wit and faith and becomes the Governor of Egypt, second only to the Pharaoh.",
+      "content_rating": null,
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-pete-s-dragon-1977",
+      "title": "Pete's Dragon",
+      "year": 1977,
+      "studio": "Walt Disney Productions",
+      "genres": [
+        "Fantasy",
+        "Animation",
+        "Comedy",
+        "Family"
+      ],
+      "animation": "live",
+      "summary": "Pete, a young orphan, runs away to a Maine fishing town with his best friend a lovable, sometimes invisible dragon named Elliott! When they are taken in by a kind lighthouse keeper, Nora, and her father, Elliott's prank playing lands them in big trouble. Then, when crooked salesmen try to capture Elliott for their own gain, Pete must attempt a daring rescue.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    },
+    {
+      "id": "manual-the-tale-of-peter-rabbit-1991",
+      "title": "The Tale of Peter Rabbit",
+      "year": 1991,
+      "studio": "HBO",
+      "genres": [
+        "Family",
+        "Animation"
+      ],
+      "animation": "animated",
+      "summary": "The story focuses on a family of anthropomorphic rabbits, the widowed mother rabbit cautioning her young against entering a vegetable garden grown by a man named Mr. McGregor, telling them: \"your Father had an accident there; he was put in a pie by Mrs. McGregor\". Whereas her three daughters obediently refrain from entering the garden, going down the lane to pick blackberries, her rebellious son Peter enters the garden to snack on some vegetables. Peter ends up eating more than is good for him and goes looking for parsley to cure his stomach ache.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Daughter's VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794623639"
+    }
+  ]
 }

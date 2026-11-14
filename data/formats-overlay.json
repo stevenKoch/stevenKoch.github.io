@@ -1,5 +1,250 @@
 {
-  "updated_at": null,
-  "note": "Physical ownership overlays keyed by plex_rating_key. Merge with movies.json formats for display. uhd_disc = owned 4K UHD disc (separate from Plex file resolution).",
-  "formats": {}
+  "updated_at": "2026-11-13T20:33:59-06:00",
+  "note": "Physical ownership overlays keyed by plex_rating_key or manual id. uhd_disc = owned 4K UHD disc (separate from Plex file resolution). Optional collection (e.g. Daughter's VHS) marks who owns the physical copy.",
+  "formats": {
+    "1240": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "24243": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "24879": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "16892": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "25004": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "20916": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "21699": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "1229": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "22327": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "678": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "24665": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "995": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "18578": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "3352": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "20957": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "16863": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "807": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "805": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "19186": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "21639": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "21641": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "3600": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "2455": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "1210": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "1701": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "24670": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "21613": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "446": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "24710": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "808": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "16854": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "21633": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "1249": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "26757": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "353": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-pinocchio-1940": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-dumbo-1941": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-three-caballeros-1944": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-lady-and-the-tramp-ii-scamp-s-adventure-2001": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-one-hundred-and-one-dalmatians-1961": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-sword-in-the-stone-1963": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-robin-hood-1973": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-many-adventures-of-winnie-the-pooh-1977": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-pooh-s-grand-adventure-the-search-for-christopher-robin-1997": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-rescuers-1977": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-rescuers-down-under-1990": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-fox-and-the-hound-1981": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-black-cauldron-1985": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-little-mermaid-ii-return-to-the-sea-2000": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-hunchback-of-notre-dame-ii-2002": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-bernadette-the-princess-of-lourdes-1990": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-iron-giant-1999": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-muppet-movie-1979": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-muppet-classic-theater-1994": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-schoolhouse-rock-the-best-of-2002": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-small-soldiers-1998": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-thumbelina-1994": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-chitty-chitty-bang-bang-1968": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-joseph-and-the-amazing-technicolor-dreamcoat-1999": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-pete-s-dragon-1977": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    },
+    "manual-the-tale-of-peter-rabbit-1991": {
+      "vhs": true,
+      "collection": "Daughter's VHS"
+    }
+  }
 }
