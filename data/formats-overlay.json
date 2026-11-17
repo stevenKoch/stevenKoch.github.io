@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-11-13T20:33:59-06:00",
-  "note": "Physical ownership overlays keyed by plex_rating_key or manual id. uhd_disc = owned 4K UHD disc (separate from Plex file resolution). Optional collection (e.g. Daughter's VHS) marks who owns the physical copy.",
+  "updated_at": "2026-11-16T19:18:08-06:00",
+  "note": "Physical ownership overlays keyed by plex_rating_key or manual id. uhd_disc = owned 4K UHD disc (separate from Plex file resolution). Optional collection (e.g. Daughter's VHS, Christmas VHS) marks a household shelf.",
   "formats": {
     "1240": {
       "vhs": true,
@@ -245,6 +245,50 @@
     "manual-the-tale-of-peter-rabbit-1991": {
       "vhs": true,
       "collection": "Daughter's VHS"
+    },
+    "326": {
+      "vhs": true,
+      "collection": "Christmas VHS"
+    },
+    "19356": {
+      "vhs": true,
+      "collection": "Christmas VHS"
+    },
+    "20941": {
+      "vhs": true,
+      "collection": "Christmas VHS"
+    },
+    "17802": {
+      "vhs": true,
+      "collection": "Christmas VHS"
+    },
+    "25395": {
+      "vhs": true,
+      "collection": "Christmas VHS"
+    },
+    "19133": {
+      "vhs": true,
+      "collection": "Christmas VHS"
+    },
+    "17764": {
+      "vhs": true,
+      "collection": "Christmas VHS"
+    },
+    "17975": {
+      "vhs": true,
+      "collection": "Christmas VHS"
+    },
+    "19169": {
+      "vhs": true,
+      "collection": "Christmas VHS"
+    },
+    "19181": {
+      "vhs": true,
+      "collection": "Christmas VHS"
+    },
+    "1": {
+      "vhs": true,
+      "collection": "Christmas VHS"
     }
   }
 }

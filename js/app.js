@@ -38,6 +38,7 @@
 
   const TMDB_IMG = "https://image.tmdb.org/t/p/";
   const COLLECTION_VHS = "Daughter's VHS";
+  const COLLECTION_CHRISTMAS = "Christmas VHS";
   // Radarr WebUI on the NAS, reachable over Tailscale. No API key: this only opens Radarr's own add-movie search.
   const RADARR_URL = "http://100.65.30.111:30025";
   const SEARCH_PAGE = 40;
@@ -468,9 +469,11 @@
       return f.uhd_disc || f.bluray || f.dvd || f.vhs;
     }).length;
     const vhsShelf = state.movies.filter((m) => movieCollection(m) === COLLECTION_VHS).length;
+    const christmasShelf = state.movies.filter((m) => movieCollection(m) === COLLECTION_CHRISTMAS).length;
     $("#stat-total").textContent = fmtNum(total);
     $("#stat-physical").textContent = fmtNum(physical);
     $("#stat-vhs").textContent = fmtNum(vhsShelf);
+    $("#stat-christmas").textContent = fmtNum(christmasShelf);
     $("#stat-wishlist").textContent = String(state.wishlist.items.length);
     const imported = state.meta.imported_at;
     let importedText = "—";
@@ -516,8 +519,9 @@
     $$(".chip[data-format]").forEach((chip) => {
       setCount(chip, withFilters(() => f.formats.add(chip.dataset.format)));
     });
-    const col = $("#chip-collection");
-    setCount(col, withFilters(() => (f.collection = col.dataset.collection)));
+    $$(".chip[data-collection]").forEach((chip) => {
+      setCount(chip, withFilters(() => (f.collection = chip.dataset.collection)));
+    });
     setCount($("#chip-wishlist"), withFilters(() => (f.wishlistOnly = true)));
     $$('#genre-chips .chip[data-genre]:not([data-genre=""])').forEach((chip) => {
       const g = chip.dataset.genre;
@@ -628,6 +632,7 @@
     if (fmt.dvd) out.push(`<span class="fmt">DVD</span>`);
     if (fmt.vhs) out.push(`<span class="fmt vhs">VHS</span>`);
     if (movieCollection(movie) === COLLECTION_VHS) out.push(`<span class="fmt dvhs">Daughter's VHS</span>`);
+    else if (movieCollection(movie) === COLLECTION_CHRISTMAS) out.push(`<span class="fmt xmas">Christmas VHS</span>`);
     else if (movieCollection(movie)) out.push(`<span class="fmt">${escapeHtml(movieCollection(movie))}</span>`);
     if (!out.length) out.push(`<span class="fmt manual">Listed — no formats marked yet</span>`);
     return out.join("");
@@ -846,6 +851,7 @@
     const colEl = $("#modal-collection");
     colEl.hidden = !collection;
     colEl.textContent = collection || "";
+    colEl.classList.toggle("xmas", collection === COLLECTION_CHRISTMAS);
 
     $("#modal-genres").innerHTML = (movie.genres || [])
       .map((g) => `<button type="button" class="pill" data-genre-jump="${escapeHtml(g)}">${escapeHtml(g)}</button>`)
@@ -1212,7 +1218,7 @@
       chip.setAttribute("aria-pressed", String(on));
     };
     $$(".chip[data-format]").forEach((c) => set(c, f.formats.has(c.dataset.format)));
-    set($("#chip-collection"), f.collection === $("#chip-collection").dataset.collection);
+    $$(".chip[data-collection]").forEach((c) => set(c, f.collection === c.dataset.collection));
     set($("#chip-wishlist"), f.wishlistOnly);
     $$("#genre-chips .chip[data-genre]").forEach((c) => set(c, c.dataset.genre === f.genre));
   }
@@ -1288,12 +1294,13 @@
       renderList();
     });
 
-    const collectionChip = $("#chip-collection");
-    collectionChip.addEventListener("click", () => {
-      const value = collectionChip.dataset.collection;
-      state.filters.collection = state.filters.collection !== value ? value : "";
-      syncChipStates();
-      renderList();
+    $$(".chip[data-collection]").forEach((collectionChip) => {
+      collectionChip.addEventListener("click", () => {
+        const value = collectionChip.dataset.collection;
+        state.filters.collection = state.filters.collection !== value ? value : "";
+        syncChipStates();
+        renderList();
+      });
     });
 
     document.addEventListener("click", (e) => {
@@ -1461,7 +1468,7 @@
     $("#btn-download-formats").addEventListener("click", () => {
       const payload = {
         updated_at: new Date().toISOString(),
-        note: "Physical ownership overlays keyed by plex_rating_key (or manual id). uhd_disc = owned 4K UHD disc (separate from Plex file resolution). Optional collection (e.g. Daughter's VHS) marks who owns the physical copy.",
+        note: "Physical ownership overlays keyed by plex_rating_key (or manual id). uhd_disc = owned 4K UHD disc (separate from Plex file resolution). Optional collection (e.g. Daughter's VHS, Christmas VHS) marks a household shelf.",
         formats: state.formatsOverlay.formats || {},
       };
       downloadJson("formats-overlay.json", payload);

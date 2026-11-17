@@ -13,7 +13,7 @@ Browse ~995 titles imported from **Koch_Plex**, filter by year / genre / format,
 - **Filters** live behind the **Filters** button next to search.
 
 - **Browse** — search title/studio/genre; filter by year range, genre, and format chips
-- **On Plex vs physical** — “On Plex” and resolution badges come from the Plex import; **4K Disc / Blu-ray / DVD / VHS / Digital** are ownership flags you edit. A **Daughter's VHS** collection tag marks tapes on that shelf (filter chip on the toolbar).
+- **On Plex vs physical** — “On Plex” and resolution badges come from the Plex import; **4K Disc / Blu-ray / DVD / VHS / Digital** are ownership flags you edit. A **Daughter's VHS** or **Christmas VHS** collection tag marks tapes on that household shelf (filter chips on the toolbar).
 - **Poster grid or list** view, sort by title / recently added / year, live facet counts on every chip
 - **Posters** from TMDB (`data/posters.json`, image paths only); titles without a match get a generated Koch title card
 - **Wishlist** — titles you want; stored in `localStorage` with downloadable JSON to commit
@@ -85,7 +85,7 @@ The script:
 3. Tries local → remote → relay connections until `/identity` answers
 4. Exports all movie library sections to `data/movies.json`
 
-Physical overlays in `data/formats-overlay.json` are **not** wiped by re-import (they merge by `plex_rating_key` in the UI). Overlay objects may also include a `collection` string (currently `Daughter's VHS`) so a household shelf can be filtered without changing the Plex import.
+Physical overlays in `data/formats-overlay.json` are **not** wiped by re-import (they merge by `plex_rating_key` in the UI). Overlay objects may also include a `collection` string (currently `Daughter's VHS` or `Christmas VHS`) so a household shelf can be filtered without changing the Plex import.
 
 ### Getting a Plex token
 

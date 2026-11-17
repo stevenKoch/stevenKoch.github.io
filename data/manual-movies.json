@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-11-13T20:33:59-06:00",
-  "note": "Manually added movies not (yet) in Plex. Merged with movies.json on load. Ids are manual-<slug>-<year>; localStorage wins for the same id. collection marks a household shelf (e.g. Daughter's VHS).",
+  "updated_at": "2026-11-16T19:18:08-06:00",
+  "note": "Manually added movies not (yet) in Plex. Merged with movies.json on load. Ids are manual-<slug>-<year>; localStorage wins for the same id. collection marks a household shelf (e.g. Daughter's VHS, Christmas VHS).",
   "movies": [
     {
       "id": "manual-pinocchio-1940",
@@ -210,7 +210,7 @@
         "Adventure"
       ],
       "animation": "animated",
-      "summary": "Whether we’re young or forever young at heart, the Hundred Acre Wood calls to that place in each of us that still believes in magic. Join pals Pooh, Piglet, Kanga, Roo, Owl, Rabbit, Tigger and Christopher Robin as they enjoy their days together and sing their way through adventures.",
+      "summary": "Whether we\u2019re young or forever young at heart, the Hundred Acre Wood calls to that place in each of us that still believes in magic. Join pals Pooh, Piglet, Kanga, Roo, Owl, Rabbit, Tigger and Christopher Robin as they enjoy their days together and sing their way through adventures.",
       "content_rating": "G",
       "resolutions": [],
       "section": "Manual",
@@ -441,7 +441,7 @@
         "Music"
       ],
       "animation": "animated",
-      "summary": "It’s February 11, 1858. Three girls from Lourdes, France, gather firewood in front of a grotto. Suddenly one of them, Bernadette Soubirous, 14, drops to her knees, gazes ecstatically at something beautiful only she can see, and starts to pray. Soon the town buzzes: Has Bernadette, poor, sickly, and always behind in school, really seen a Lady from Heaven? Then a spring bubbles up from nowhere and withered arms and sightless eyes are cured.  At last, the Lady tells Bernadette her name: “I am The Immaculate Concepcion.”  BERNADETTE, THE PRINCESS OF LOURDES, is the exciting true story of a visit by the Queen of Heaven that left the entire world a source of health for body and soul.",
+      "summary": "It\u2019s February 11, 1858. Three girls from Lourdes, France, gather firewood in front of a grotto. Suddenly one of them, Bernadette Soubirous, 14, drops to her knees, gazes ecstatically at something beautiful only she can see, and starts to pray. Soon the town buzzes: Has Bernadette, poor, sickly, and always behind in school, really seen a Lady from Heaven? Then a spring bubbles up from nowhere and withered arms and sightless eyes are cured.  At last, the Lady tells Bernadette her name: \u201cI am The Immaculate Concepcion.\u201d  BERNADETTE, THE PRINCESS OF LOURDES, is the exciting true story of a visit by the Queen of Heaven that left the entire world a source of health for body and soul.",
       "content_rating": "G",
       "resolutions": [],
       "section": "Manual",
@@ -555,7 +555,7 @@
         "Music"
       ],
       "animation": "animated",
-      "summary": "Schoolhouse Rock, the timeless collection of animated songs that taught an entire generation that “Knowledge Is Power,” is back in this special 30th Anniversary Edition. The Best of Schoolhouse Rock features the Top 25 songs as voted by Schoolhouse Rock fans everywhere in an online poll.",
+      "summary": "Schoolhouse Rock, the timeless collection of animated songs that taught an entire generation that \u201cKnowledge Is Power,\u201d is back in this special 30th Anniversary Edition. The Best of Schoolhouse Rock features the Top 25 songs as voted by Schoolhouse Rock fans everywhere in an online poll.",
       "content_rating": null,
       "resolutions": [],
       "section": "Manual",
@@ -741,6 +741,142 @@
         "uhd4k": false
       },
       "added_at": "1794623639"
+    },
+    {
+      "id": "manual-heidi-1937",
+      "title": "Heidi",
+      "year": 1937,
+      "studio": "20th Century Fox",
+      "genres": [
+        "Drama",
+        "Family"
+      ],
+      "animation": "live",
+      "summary": "Heidi is orphaned and her uncaring maternal Aunt Dete takes her to the mountains to live with her reclusive, grumpy paternal grandfather, Adolph Kramer. Heidi brings her grandfather back into mountain society through her sweet ways and sheer love. When Dete later returns and steals Heidi away to become the companion of a rich man's wheelchair-bound daughter, the grandfather is heartsick to discover his little girl missing and immediately sets out to get her back.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Christmas VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794878288"
+    },
+    {
+      "id": "manual-little-women-s-christmas-story-1992",
+      "title": "Little Women's Christmas Story",
+      "year": 1992,
+      "studio": "Nippon Animation",
+      "genres": [
+        "Animation",
+        "Family"
+      ],
+      "animation": "animated",
+      "summary": "While the sisters try to adjust to their Father not being home for Christmas, due to serving in the Civil War, Jo attempts to finish her Christmas play. At the same time, she tries to become better acquainted with their neighbor, Laurie, who also helps them to find a suitable Christmas Tree.",
+      "content_rating": "NR",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Christmas VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794878288"
+    },
+    {
+      "id": "manual-nicholas-the-boy-who-became-santa-1990",
+      "title": "Nicholas: The Boy Who Became Santa",
+      "year": 1990,
+      "studio": "CCC of America",
+      "genres": [
+        "Animation",
+        "Family"
+      ],
+      "animation": "animated",
+      "summary": "Nicholas was still a young child when he discovered a very special secret that changed his life forever. It was the gift of giving, by which he brought happiness to many people; but in sharing this gift Nicholas had to face many dangers. Here is the fascinating story of the boy whose love and care for others make him one of the most popular figures of all times. Today, more than sixteen centuries later, the entire world celebrates the kindness and generosity of the man we call Santa Claus. Based on historical facts and traditions, NICHOLAS: THE BOY WHO BECAME SANTA, is the beautifully animated film worth watching all year long.",
+      "content_rating": "NR",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Christmas VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794878288"
+    },
+    {
+      "id": "manual-winnie-the-pooh-seasons-of-giving-1999",
+      "title": "Winnie the Pooh: Seasons of Giving",
+      "year": 1999,
+      "studio": "Disney Television Animation",
+      "genres": [
+        "Animation",
+        "Family"
+      ],
+      "animation": "animated",
+      "summary": "A collection of Winnie the Pooh's memorable holiday adventures, as Winnie, Piglet, and Tigger set out to find the right ingredients for Winter, Rabbit learns how to manage a complicated Thanksgiving dinner, and everyone gets a special visit from a new friend. Featuring a number of delightful songs for singing along, this movie is sure to become a favorite holiday classic.",
+      "content_rating": "G",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Christmas VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794878288"
+    },
+    {
+      "id": "manual-disney-sing-along-songs-very-merry-christmas-songs-1988",
+      "title": "Disney Sing-Along Songs: Very Merry Christmas Songs",
+      "year": 1988,
+      "studio": "Walt Disney Home Video",
+      "genres": [
+        "Music",
+        "Animation",
+        "Family"
+      ],
+      "animation": "animated",
+      "summary": "It's the happiest time of the year! And the season of Santa, reindeer and gift-wrapped surprises will be even jollier with this joyful volume of Disney's Sing-Along Songs: Very Merry Christmas Songs. Gather up the family and enjoy a fun-filled collection of the most beloved Christmas songs and carols, accompanied by a wonderland of wintry holiday scenes! It's a kaleidoscope of sights and sounds that is sure to make everyone's holiday very, very merry! Voices ready? Let's all sing!",
+      "content_rating": "NR",
+      "resolutions": [],
+      "section": "Manual",
+      "source": "manual",
+      "collection": "Christmas VHS",
+      "formats": {
+        "plex": false,
+        "bluray": false,
+        "dvd": false,
+        "vhs": true,
+        "digital": false,
+        "uhd_disc": false,
+        "uhd4k": false
+      },
+      "added_at": "1794878288"
     }
   ]
 }
